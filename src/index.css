@@ -1,0 +1,371 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+
+  body {
+    @apply text-ink min-h-screen transition-colors duration-300;
+    background:
+      radial-gradient(at 0% 0%, rgba(214, 223, 248, 0.5) 0px, transparent 50%),
+      radial-gradient(at 100% 0%, rgba(237, 0, 134, 0.05) 0px, transparent 50%),
+      radial-gradient(at 100% 100%, rgba(214, 223, 248, 0.3) 0px, transparent 50%),
+      radial-gradient(at 0% 100%, rgba(237, 0, 134, 0.05) 0px, transparent 50%),
+      #f8f5f7;
+  }
+
+  .dark body,
+  body.dark {
+    background: #1A1A1A;
+    background-image: none;
+    color: #ffffff;
+  }
+
+  .dark {
+    color-scheme: dark;
+  }
+
+  ::selection {
+    @apply bg-primary/20 text-primary-500;
+  }
+}
+
+/* ── FullCalendar Theme ── */
+:root {
+  --fc-border-color: #EBE8FC;
+  --fc-button-bg-color: #EE0087;
+  --fc-button-border-color: transparent;
+  --fc-button-hover-bg-color: #CC0074;
+  --fc-button-hover-border-color: transparent;
+  --fc-button-active-bg-color: #1A1A1A;
+  --fc-button-active-border-color: transparent;
+  --fc-today-bg-color: rgba(190, 223, 63, 0.08);
+  --fc-neutral-bg-color: #F5F3FE;
+  --fc-page-bg-color: transparent;
+  --fc-list-event-hover-bg-color: #F5F3FE;
+}
+
+.dark {
+  --fc-border-color: #2D2D2D;
+  --fc-button-bg-color: #EE0087;
+  --fc-button-hover-bg-color: #CC0074;
+  --fc-button-active-bg-color: #EE0087;
+  --fc-button-active-border-color: transparent;
+  --fc-today-bg-color: rgba(238, 0, 135, 0.1);
+  --fc-neutral-bg-color: #2A2A2A;
+  --fc-page-bg-color: #222222;
+  --fc-list-event-hover-bg-color: #2A2A2A;
+}
+
+.fc {
+  font-family: inherit;
+}
+
+/* Toolbar */
+.fc .fc-toolbar {
+  @apply flex-col sm:flex-row gap-3 mb-4;
+}
+
+.fc .fc-toolbar-title {
+  @apply text-lg md:text-xl font-extrabold tracking-tight text-ink;
+}
+
+.dark .fc .fc-toolbar-title {
+  color: #ffffff;
+}
+
+.dark .fc .fc-toolbar {
+  color: #ffffff;
+}
+
+/* Buttons */
+.fc .fc-button {
+  @apply rounded-xl font-semibold text-xs px-4 py-2 shadow-sm transition-all duration-200 border-0 focus:ring-2 focus:ring-primary/30 focus:ring-offset-1;
+}
+
+.dark .fc .fc-button {
+  --tw-ring-offset-color: #222222;
+}
+
+.fc .fc-button:not(:disabled):active,
+.fc .fc-button-active {
+  @apply shadow-inner;
+}
+
+.fc .fc-button-group {
+  @apply rounded-xl overflow-hidden shadow-sm;
+}
+
+.fc .fc-button-group > .fc-button {
+  @apply rounded-none first:rounded-l-xl last:rounded-r-xl;
+}
+
+.fc .fc-today-button {
+  @apply rounded-xl bg-ink text-white hover:bg-ink-500;
+}
+
+.dark .fc .fc-today-button {
+  background-color: rgba(238, 0, 135, 0.2);
+  color: #EE0087;
+  font-weight: 600;
+}
+
+.dark .fc .fc-today-button:hover {
+  background-color: rgba(238, 0, 135, 0.3);
+}
+
+/* Day headers */
+.fc .fc-col-header-cell {
+  @apply border-0 py-2;
+}
+
+.fc .fc-col-header-cell-cushion {
+  @apply text-xs font-bold uppercase tracking-widest text-ink-400 no-underline;
+}
+
+/* Day numbers */
+.fc .fc-daygrid-day-number {
+  @apply text-sm font-medium text-ink-400 px-2.5 py-1.5 no-underline;
+}
+
+.dark .fc .fc-col-header-cell {
+  background-color: #2A2A2A;
+}
+
+.dark .fc .fc-daygrid-day-number {
+  color: #CCCCCC;
+}
+
+.dark .fc .fc-col-header-cell-cushion {
+  color: #6B7280;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-weight: 700;
+  font-size: 0.65rem;
+}
+
+.fc .fc-day-today .fc-daygrid-day-number {
+  @apply bg-primary text-white rounded-full w-7 h-7 flex items-center justify-center text-xs font-bold mx-1 mt-1;
+}
+
+/* Events */
+.fc .fc-event {
+  @apply rounded-lg border-0 px-2.5 py-1 text-xs font-semibold cursor-pointer transition-all duration-150 shadow-sm;
+}
+
+.dark .fc .fc-event {
+  border-radius: 0.5rem;
+  border-left: 4px solid;
+  padding: 0.375rem 0.5rem;
+  font-size: 0.625rem;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.fc .fc-event:hover {
+  @apply shadow-md scale-[1.02] brightness-110;
+  transform-origin: left center;
+}
+
+.dark .fc .fc-event:hover {
+  filter: brightness(1.2);
+  transform: none;
+  box-shadow: none;
+}
+
+.fc .fc-daygrid-event-dot {
+  @apply hidden;
+}
+
+.fc .fc-daygrid-dot-event .fc-event-title {
+  @apply font-semibold;
+}
+
+/* Day cells */
+.fc .fc-daygrid-day {
+  @apply transition-colors duration-150;
+}
+
+.fc .fc-daygrid-day:hover {
+  background-color: rgba(214, 208, 248, 0.15);
+}
+
+.dark .fc .fc-daygrid-day:hover {
+  background-color: rgba(255, 255, 255, 0.03);
+}
+
+.dark .fc .fc-day-other .fc-daygrid-day-number {
+  opacity: 0.3;
+}
+
+.fc .fc-daygrid-day-frame {
+  @apply min-h-[80px] md:min-h-[100px];
+}
+
+.dark .fc .fc-daygrid-day-frame {
+  min-height: 140px;
+}
+
+/* Utility classes from reference design */
+.lavender-border {
+  border: 1px solid rgba(230, 230, 250, 0.15);
+}
+
+.lavender-hover:hover {
+  background-color: rgba(230, 230, 250, 0.05);
+}
+
+/* More events link */
+.fc .fc-daygrid-more-link {
+  @apply text-xs font-bold text-primary hover:text-primary-500 no-underline mt-0.5;
+}
+
+.dark .fc .fc-daygrid-more-link {
+  color: #6B7280;
+  font-weight: 700;
+}
+
+/* List view */
+.fc .fc-list {
+  @apply border border-lavender-100 rounded-xl overflow-hidden;
+}
+
+.dark .fc .fc-list {
+  border-color: #2D2D2D;
+}
+
+.fc .fc-list-day-cushion {
+  @apply bg-lavender-50 font-bold text-ink text-sm;
+}
+
+.dark .fc .fc-list-day-cushion {
+  background-color: #2A2A2A;
+  color: #ffffff;
+}
+
+.fc .fc-list-event td {
+  @apply py-3;
+  border-color: #EBE8FC;
+}
+
+.dark .fc .fc-list-event td {
+  border-color: #2D2D2D;
+}
+
+.fc .fc-list-event:hover td {
+  @apply bg-lavender-50;
+}
+
+.dark .fc .fc-list-event:hover td {
+  background-color: #2A2A2A;
+}
+
+/* Borders */
+.fc td, .fc th {
+  border-color: #EBE8FC;
+}
+
+.dark .fc td, .dark .fc th {
+  border-color: #2D2D2D;
+}
+
+.fc .fc-scrollgrid {
+  @apply border border-lavender-100 rounded-xl overflow-hidden;
+}
+
+.dark .fc .fc-scrollgrid {
+  border-color: #2D2D2D;
+  background-color: #222222;
+}
+
+.fc .fc-scrollgrid td:last-of-type {
+  border-right: 0;
+}
+
+/* Time grid */
+.fc .fc-timegrid-slot-label-cushion {
+  @apply text-xs text-ink-300 font-medium;
+}
+
+.dark .fc .fc-timegrid-slot-label-cushion {
+  color: #6B7280;
+}
+
+.fc .fc-timegrid-now-indicator-line {
+  @apply border-primary;
+  border-width: 2px;
+}
+
+.fc .fc-timegrid-now-indicator-arrow {
+  @apply border-primary;
+}
+
+/* ── Utilities ── */
+@layer utilities {
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: #D6D0F8 transparent;
+  }
+
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+
+  .dark .scrollbar-thin {
+    scrollbar-color: #333333 transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    @apply bg-lavender-300 rounded-full;
+  }
+
+  .dark .scrollbar-thin::-webkit-scrollbar-thumb {
+    background-color: #333333;
+  }
+
+  .glass {
+    @apply bg-white/80 backdrop-blur-lg border border-white/60 shadow-glass;
+  }
+
+  .glass-strong {
+    @apply bg-white/95 backdrop-blur-xl border border-lavender-100 shadow-glass;
+  }
+
+  .glass-header {
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+  }
+}
+
+/* Dark mode component overrides (not in @layer to avoid specificity issues) */
+.dark .glass {
+  background: rgba(26, 26, 26, 0.8);
+  border-color: #2D2D2D;
+  box-shadow: 0 8px 40px rgba(0, 0, 0, 0.3);
+}
+
+.dark .glass-strong {
+  background: rgba(26, 26, 26, 0.8);
+  border-color: #2D2D2D;
+  box-shadow: 0 4px 30px rgba(0, 0, 0, 0.3);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
