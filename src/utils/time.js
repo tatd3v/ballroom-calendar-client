@@ -18,14 +18,6 @@ export const formatTimeWithMeridiem = (time, { fallbackLabel = 'All day', includ
   return includeMeridiem ? `${displayHours}:${minuteString} ${meridiem}` : `${displayHours}:${minuteString}`
 }
 
-const getBrowserTimeZone = () => {
-  if (typeof Intl !== 'undefined' && Intl.DateTimeFormat) {
-    const options = Intl.DateTimeFormat().resolvedOptions?.()
-    return options?.timeZone || 'UTC'
-  }
-  return 'UTC'
-}
-
 export const parseDateOnlyToLocal = (dateString) => {
   if (!dateString || typeof dateString !== 'string') {
     return null
@@ -36,24 +28,24 @@ export const parseDateOnlyToLocal = (dateString) => {
     return null
   }
 
-  return new Date(year, month - 1, day)
+  // Create date at noon in local time to avoid timezone shift issues
+  // This ensures the date displays as stored in DB regardless of user's timezone
+  return new Date(year, month - 1, day, 12, 0, 0)
 }
 
 export const formatDateWithLocale = (dateString, {
   locale = 'en-US',
   fallbackLabel = 'Date to be announced',
   options = { month: 'short', day: 'numeric', year: 'numeric' },
-  timeZone,
 } = {}) => {
   const parsed = parseDateOnlyToLocal(dateString)
   if (!parsed) {
     return fallbackLabel
   }
 
-  const formatter = new Intl.DateTimeFormat(locale, {
-    ...options,
-    timeZone: timeZone || getBrowserTimeZone()
-  })
+  // Format without timezone to ensure consistent display across all timezones
+  // The date will always show as stored in the database
+  const formatter = new Intl.DateTimeFormat(locale, options)
 
   return formatter.format(parsed)
 }
