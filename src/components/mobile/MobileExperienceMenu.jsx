@@ -1,17 +1,31 @@
-import { useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import {
+  CalendarDays,
+  BarChart3,
+  Users,
+  Settings,
+  Plus,
+  Search,
+  MoreVertical,
+  MapPin,
+  Compass,
+  Clock,
   X,
-  User,
-  Sun,
-  Moon,
-  Globe,
+  ChevronLeft,
+  ChevronRight,
   Check,
+  User,
   LogOut
 } from 'lucide-react'
-import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
-import { changeAppLanguage } from '../../utils/locale'
+import { useEvents } from '../../context/EventContext'
+import { useTheme } from '../../context/ThemeContext'
+import MobilePreferences from './MobilePreferences'
+import BottomNavItem from './BottomNavItem'
+import { formatTimeWithMeridiem, formatDateWithLocale } from '../../utils/time'
+import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
 
 /**
  * Shared mobile experience menu that centralizes navigation, preferences, and user actions.
@@ -30,19 +44,9 @@ export default function MobileExperienceMenu({
   const { theme, toggleTheme } = useTheme()
   const { t, i18n } = useTranslation()
   const { user, logout } = useAuth()
-  const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false)
 
   const handleClose = () => {
     if (onClose) onClose()
-  }
-
-  const handleLanguageChange = (lng) => {
-    if (lng === i18n.language) {
-      setLanguageDropdownOpen(false)
-      return
-    }
-    changeAppLanguage(i18n, lng)
-    setLanguageDropdownOpen(false)
   }
 
   const footerItems = useMemo(() => {
@@ -139,53 +143,10 @@ export default function MobileExperienceMenu({
         ))}
 
         {enablePreferences && (
-          <div className="pt-3 border-t border-primary/10">
-            <h3 className="text-xs font-semibold text-ink/60 dark:text-white/60 uppercase tracking-widest px-1 mb-3">
-              {t('settings.preferences', 'Preferences')}
-            </h3>
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                onClick={toggleTheme}
-                className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white/70 dark:bg-white/5 border border-primary/10 hover:border-primary/40 transition-colors"
-              >
-                {theme === 'dark' ? <Sun className="w-5 h-5 text-amber-400" /> : <Moon className="w-5 h-5 text-indigo-500" />}
-                <span className="text-xs font-semibold text-ink dark:text-white">
-                  {theme === 'dark' ? t('theme.lightMode', 'Light') : t('theme.darkMode', 'Dark')}
-                </span>
-              </button>
-
-              <div className="relative">
-                <button
-                  onClick={() => setLanguageDropdownOpen((prev) => !prev)}
-                  className="flex items-center justify-center gap-2 px-4 py-3 rounded-2xl bg-white/70 dark:bg-white/5 border border-primary/10 hover:border-primary/40 transition-colors w-full"
-                >
-                  <Globe className="w-5 h-5 text-primary" />
-                  <span className="text-xs font-semibold text-ink dark:text-white">
-                    {i18n.language.toUpperCase()}
-                  </span>
-                </button>
-
-                {languageDropdownOpen && (
-                  <div className="absolute bottom-full left-0 right-0 mb-2 bg-white dark:bg-ink rounded-2xl border border-primary/10 overflow-hidden">
-                    {['en', 'es'].map((lng) => (
-                      <button
-                        key={lng}
-                        onClick={() => handleLanguageChange(lng)}
-                        className={`w-full flex items-center justify-between px-3 py-2 text-sm ${
-                          i18n.language === lng
-                            ? 'bg-primary/10 text-primary'
-                            : 'text-ink dark:text-white hover:bg-primary/5'
-                        }`}
-                      >
-                        <span className="font-semibold uppercase">{lng}</span>
-                        {i18n.language === lng && <Check className="w-4 h-4" />}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
+          <MobilePreferences
+            onThemeToggle={toggleTheme}
+            theme={theme}
+          />
         )}
 
         {footerItems.length > 0 && (
