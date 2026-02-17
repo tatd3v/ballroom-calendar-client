@@ -6,7 +6,7 @@ import { useEvents } from '../context/EventContext'
 import { useTheme } from '../context/ThemeContext'
 import useMobile from '../hooks/useMobile'
 import MobileAdminExperience from '../components/mobile/MobileAdminExperience'
-import { formatTimeWithMeridiem, formatDateWithLocale } from '../utils/time'
+import { formatTimeWithMeridiem, formatDateWithLocale, parseDateOnlyToLocal } from '../utils/time'
 import { 
   AlertTriangle, 
   CheckCircle, 
@@ -571,7 +571,7 @@ export default function AdminPage() {
                     </td>
                     <td className="px-6 py-5">
                       {(() => {
-                        const startDate = event.start ? new Date(`${event.start}T00:00:00Z`) : null
+                        const startDate = event.start ? parseDateOnlyToLocal(event.start) : null
                         const isPast = startDate && !Number.isNaN(startDate.getTime()) && startDate < new Date()
                         return (
                           <span className={`flex items-center gap-1.5 text-sm font-medium ${
