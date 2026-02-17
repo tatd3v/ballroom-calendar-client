@@ -94,6 +94,7 @@ export function EventProvider({ children }) {
   }, []);
 
   const cityCounts = useMemo(() => {
+    if (!Array.isArray(events)) return {}
     return events.reduce((acc, event) => {
       if (!event?.city) return acc
       acc[event.city] = (acc[event.city] || 0) + 1
