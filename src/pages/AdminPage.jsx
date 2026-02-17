@@ -30,7 +30,7 @@ import {
 export default function AdminPage() {
   // Context hooks first
   const { user, canEditCity } = useAuth()
-  const { rawEvents, events, cities, cityColors, selectedCity, setSelectedCity, addEvent, updateEvent, deleteEvent } = useEvents()
+  const { events, cities, cityColors, selectedCity, setSelectedCity, addEvent, updateEvent, deleteEvent } = useEvents()
   const { t, i18n } = useTranslation()
   const isMobile = useMobile()
   
@@ -76,7 +76,7 @@ export default function AdminPage() {
 
   useEffect(() => {
     setCurrentPage(1)
-  }, [selectedCity, rawEvents.length])
+  }, [selectedCity, events?.length])
 
   if (!user) {
     return <Navigate to="/login" replace />
@@ -111,9 +111,18 @@ export default function AdminPage() {
 
   const userEvents = user.role === 'admin' 
     ? selectedCity === 'all' 
-      ? rawEvents 
-      : rawEvents.filter(e => e.city === selectedCity)
-    : rawEvents.filter(e => e.city === user.city)
+      ? (events || [])
+      : (events || []).filter(e => e.city === selectedCity)
+    : (events || []).filter(e => e.city === user.city)
+
+  // Debug logging
+  console.log('Admin Debug:', {
+    userRole: user?.role,
+    selectedCity,
+    eventsLength: events?.length,
+    userEventsLength: userEvents.length,
+    firstEvent: events?.[0]
+  })
 
   const totalPages = Math.max(1, Math.ceil(userEvents.length / ITEMS_PER_PAGE))
   const safePage = Math.min(currentPage, totalPages)
@@ -250,7 +259,7 @@ export default function AdminPage() {
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
         <div>
           <h2 className="text-3xl font-bold text-ink dark:text-white">{t('admin.manageEvents')}</h2>
-          <p className="text-primary/60 dark:text-ink-300 mt-1">{events.length} {t('admin.totalEvents')}</p>
+          <p className="text-primary/60 dark:text-ink-300 mt-1">{(events || []).length} {t('admin.totalEvents')}</p>
         </div>
         <button
           onClick={() => setShowForm(true)}
