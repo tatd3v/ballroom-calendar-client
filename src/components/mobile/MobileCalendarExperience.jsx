@@ -19,7 +19,7 @@ import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import MobileExperienceMenu from './MobileExperienceMenu'
 import BottomNavItem from './BottomNavItem'
-import { formatTimeWithMeridiem } from '../../utils/time'
+import { formatTimeWithMeridiem, parseDateOnlyToLocal } from '../../utils/time'
 import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
 
 export default function MobileCalendarExperience({ onSelectEvent }) {
@@ -41,29 +41,39 @@ export default function MobileCalendarExperience({ onSelectEvent }) {
 
     const upcoming = filteredEvents.filter((event) => {
       if (!event?.start) return true
-      const start = new Date(event.start)
-      if (Number.isNaN(start.getTime())) return true
+      const start = parseDateOnlyToLocal(event.start)
+      if (!start || Number.isNaN(start.getTime())) return true
       return start >= today
     })
 
     const groups = upcoming.reduce((acc, event) => {
       if (!event?.start) return acc
-      const key = new Date(event.start).toISOString().split('T')[0]
+      const key = event.start
       if (!acc[key]) acc[key] = []
       acc[key].push(event)
       return acc
     }, {})
 
     return Object.entries(groups)
-      .sort((a, b) => new Date(a[0]) - new Date(b[0]))
+      .sort((a, b) => {
+        const dateA = parseDateOnlyToLocal(a[0])
+        const dateB = parseDateOnlyToLocal(b[0])
+        return (dateA?.getTime() || 0) - (dateB?.getTime() || 0)
+      })
       .map(([date, items]) => ({
         date,
-        items: items.sort((a, b) => new Date(a.start) - new Date(b.start)),
+        items: items.sort((a, b) => {
+          const dateA = parseDateOnlyToLocal(a.start)
+          const dateB = parseDateOnlyToLocal(b.start)
+          return (dateA?.getTime() || 0) - (dateB?.getTime() || 0)
+        }),
       }))
   }, [filteredEvents])
 
   const formatDayHeading = (date) => {
-    return new Date(date).toLocaleDateString(locale, {
+    const parsed = parseDateOnlyToLocal(date)
+    if (!parsed) return date
+    return parsed.toLocaleDateString(locale, {
       weekday: 'long',
       month: 'short',
       day: 'numeric',
@@ -73,8 +83,8 @@ export default function MobileCalendarExperience({ onSelectEvent }) {
   const getTimeDisplay = (event) => {
     if (event.time) return formatTimeWithMeridiem(event.time, { fallbackLabel: '' })
     if (event.start) {
-      const parsed = new Date(event.start)
-      if (!Number.isNaN(parsed.getTime())) {
+      const parsed = parseDateOnlyToLocal(event.start)
+      if (parsed && !Number.isNaN(parsed.getTime())) {
         const h = parsed.getHours(), m = parsed.getMinutes()
         if (h || m) return formatTimeWithMeridiem(`${String(h).padStart(2,'0')}:${String(m).padStart(2,'0')}`, { fallbackLabel: '' })
       }
