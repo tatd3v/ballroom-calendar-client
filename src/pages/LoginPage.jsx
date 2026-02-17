@@ -1,26 +1,22 @@
-import { useMemo, useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useState, useMemo } from 'react'
+import { Navigate, useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
-import useMobile from '../hooks/useMobile'
+import { useMobileMenu } from '../hooks/useMobileMenu'
+import MobileHeader from '../components/mobile/MobileHeader'
 import MobileExperienceMenu from '../components/mobile/MobileExperienceMenu'
-import { changeAppLanguage } from '../utils/locale'
-import {
-  CalendarDays,
+import MobilePreferences from '../components/mobile/MobilePreferences'
+import { 
+  CalendarDays, 
+  UserRound,
+  Bookmark,
+  Compass,
   AlertCircle,
   Mail,
   LockKeyhole,
   ArrowRight,
-  Sparkles,
-  Menu,
-  X,
-  Sun,
-  Moon,
-  Globe,
-  Compass,
-  Bookmark,
-  UserRound,
+  Sparkles
 } from 'lucide-react'
 
 export default function LoginPage() {
@@ -32,8 +28,7 @@ export default function LoginPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
-  const isMobile = useMobile()
-  const [menuOpen, setMenuOpen] = useState(false)
+  const { menuOpen, toggleMenu, closeMenu } = useMobileMenu()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -79,32 +74,16 @@ export default function LoginPage() {
 
   return (
     <div className="font-display min-h-screen bg-lavender/30 dark:bg-background-dark flex flex-col">
-      <header className="md:hidden sticky top-0 z-40 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
-        <div className="flex items-center justify-between px-4 h-16">
-          <div className="flex items-center gap-3">
-            <button
-              className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-              aria-label="Open menu"
-              onClick={() => setMenuOpen((prev) => !prev)}
-            >
-              {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                <CalendarDays className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-bold text-lg tracking-tight text-ink dark:text-white">{t('calendar.title')}</h1>
-                <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">{t('nav.subtitle')}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </header>
+      <MobileHeader
+        title={t('calendar.title')}
+        subtitle={t('nav.subtitle')}
+        menuOpen={menuOpen}
+        onMenuToggle={toggleMenu}
+      />
 
       <MobileExperienceMenu
         open={menuOpen}
-        onClose={() => setMenuOpen(false)}
+        onClose={closeMenu}
         title={t('calendar.title')}
         subtitle={t('nav.subtitle')}
         sections={menuSections}
