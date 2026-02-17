@@ -4,6 +4,13 @@ import { VitePWA } from 'vite-plugin-pwa';
 
 export default defineConfig({
   server: {
+    proxy: {
+      '/api': {
+        target: 'http://localhost:3001',
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     headers: {
       'Content-Security-Policy':
         "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https:; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
