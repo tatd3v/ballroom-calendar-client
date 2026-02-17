@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { X, MapPin, Calendar, FileText, Clock } from 'lucide-react'
 import { useEvents } from '../context/EventContext'
 import { useTheme } from '../context/ThemeContext'
+import { parseDateOnlyToLocal } from '../utils/time'
 
 export default function EventModal({ event, onClose }) {
   const { cityColors } = useEvents()
@@ -17,8 +18,8 @@ export default function EventModal({ event, onClose }) {
   const description = event.extendedProps?.description || event.description
   const color = cityColors[city] || '#EE0087'
 
-  const startDate = new Date(event.start)
-  const endDate = event.end ? new Date(event.end) : null
+  const startDate = parseDateOnlyToLocal(event.start) || new Date(event.start)
+  const endDate = event.end ? (parseDateOnlyToLocal(event.end) || new Date(event.end)) : null
   const isMultiDay = endDate && endDate.toDateString() !== startDate.toDateString()
   const isPast = startDate < new Date()
 
