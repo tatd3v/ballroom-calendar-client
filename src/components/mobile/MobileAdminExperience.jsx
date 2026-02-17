@@ -28,7 +28,7 @@ import BottomNavItem from './BottomNavItem'
 import MobileFormInput from './MobileFormInput'
 import MobileFormTextarea from './MobileFormTextarea'
 import MobileFormSelect from './MobileFormSelect'
-import { formatTimeWithMeridiem, formatDateWithLocale } from '../../utils/time'
+import { formatTimeWithMeridiem, formatDateWithLocale, parseDateOnlyToLocal } from '../../utils/time'
 import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
 
 export default function MobileAdminExperience({ initialEditEvent }) {
@@ -218,7 +218,7 @@ export default function MobileAdminExperience({ initialEditEvent }) {
 
     return baseEvents
       .map(event => {
-        const startDate = event.date ? new Date(`${event.date}T00:00:00Z`) : null
+        const startDate = event.date ? parseDateOnlyToLocal(event.date) : null
         const status = startDate && !Number.isNaN(startDate.getTime()) && startDate < today ? 'past' : 'live'
         return {
           ...event,
@@ -227,8 +227,8 @@ export default function MobileAdminExperience({ initialEditEvent }) {
         }
       })
       .sort((a, b) => {
-        const dateA = a.date ? new Date(a.date).getTime() : 0
-        const dateB = b.date ? new Date(b.date).getTime() : 0
+        const dateA = a.date ? parseDateOnlyToLocal(a.date)?.getTime() || 0 : 0
+        const dateB = b.date ? parseDateOnlyToLocal(b.date)?.getTime() || 0 : 0
         return dateA - dateB
       })
   }, [user, events, selectedCity, locale, t])
