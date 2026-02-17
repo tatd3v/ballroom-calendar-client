@@ -12,7 +12,6 @@ import {
   MapPin,
   Compass,
   Clock,
-  X,
   ChevronLeft,
   ChevronRight,
   Check,
@@ -72,20 +71,11 @@ export default function MobileExperienceMenu({
         className="absolute bottom-0 left-0 right-0 bg-white dark:bg-ink rounded-t-3xl p-6 space-y-5 shadow-2xl border border-primary/5"
         onClick={(e) => e.stopPropagation()}
       >
-        <div className="flex items-center justify-between mb-1">
-          <div>
-            {subtitle && (
-              <p className="text-xs uppercase tracking-[0.3em] text-primary/70 font-bold">{subtitle}</p>
-            )}
-            <h2 className="text-2xl font-black text-ink dark:text-white">{title}</h2>
-          </div>
-          <button
-            onClick={handleClose}
-            className="p-2 rounded-full hover:bg-primary/10 transition-colors"
-            aria-label={t('modal.close', 'Close')}
-          >
-            <X className="w-5 h-5 text-ink/70 dark:text-white/70" />
-          </button>
+        <div className="mb-1">
+          {subtitle && (
+            <p className="text-xs uppercase tracking-[0.3em] text-primary/70 font-bold">{subtitle}</p>
+          )}
+          <h2 className="text-2xl font-black text-ink dark:text-white">{title}</h2>
         </div>
 
         {showUserCard && user && (

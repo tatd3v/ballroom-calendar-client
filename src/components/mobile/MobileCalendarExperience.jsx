@@ -4,7 +4,6 @@ import { useNavigate } from 'react-router-dom'
 import {
   CalendarDays,
   ChevronRight,
-  Compass,
   Bookmark,
   UserRound,
   MapPin,
@@ -105,12 +104,6 @@ export default function MobileCalendarExperience({ onSelectEvent }) {
 
   const menuSections = useMemo(() => {
     const baseItems = [
-      {
-        id: 'explore',
-        label: t('mobile.menu.explore', { defaultValue: 'Explore' }),
-        icon: Compass,
-        onClick: () => handleNavigate('/'),
-      },
       {
         id: 'events',
         label: t('mobile.menu.events', { defaultValue: 'Events' }),
@@ -308,7 +301,6 @@ export default function MobileCalendarExperience({ onSelectEvent }) {
 
           <nav className="fixed bottom-0 w-full bg-white dark:bg-background-dark border-t border-primary/10 px-6 py-3 pb-6 z-40">
             <div className="flex items-center justify-between max-w-md mx-auto">
-              <BottomNavItem icon={Compass} label="Explore" active onClick={() => navigate('/')} />
               <BottomNavItem icon={CalendarDays} label="Events" onClick={() => navigate('/')} />
               <BottomNavItem icon={Bookmark} label="Saved" onClick={() => navigate('/admin')} />
               <BottomNavItem icon={UserRound} label="Profile" onClick={() => navigate('/admin')} />
