@@ -229,12 +229,6 @@ export default function Layout() {
                     </div>
                   )}
                 </div>
-                <button
-                  onClick={toggleTheme}
-                  className="w-9 h-9 flex items-center justify-center rounded-xl bg-white/5 dark:bg-white/5 text-primary hover:bg-white/10 transition-all duration-200"
-                >
-                  {theme === 'dark' ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-                </button>
               </div>
             </nav>
           </div>
