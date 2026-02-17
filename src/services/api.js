@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
+const API_URL = import.meta.env.VITE_API_URL || '/api';
 
 function getToken() {
   return localStorage.getItem('calendar_token');
@@ -41,11 +41,24 @@ export const authApi = {
     }),
 };
 
-export const eventsApi = {
-  getAll: (city) =>
-    request(`/events${city && city !== 'all' ? `?city=${city}` : ''}`),
+function buildQuery(params = {}) {
+  const definedEntries = Object.entries(params).filter(([, value]) => value !== undefined && value !== null)
+  if (!definedEntries.length) return ''
+  const searchParams = new URLSearchParams()
+  definedEntries.forEach(([key, value]) => searchParams.append(key, value))
+  return `?${searchParams.toString()}`
+}
 
-  getById: (id) => request(`/events/${id}`),
+export const eventsApi = {
+  getAll: ({ city, lang } = {}) => {
+    const params = {
+      ...(city && city !== 'all' ? { city } : {}),
+      ...(lang ? { lang } : {}),
+    }
+    return request(`/events${buildQuery(params)}`)
+  },
+
+  getById: (id, { lang } = {}) => request(`/events/${id}${buildQuery({ lang })}`),
 
   getCities: () => request('/events/cities'),
 
