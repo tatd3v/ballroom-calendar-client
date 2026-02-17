@@ -223,23 +223,6 @@ export default function MobileCalendarExperience({ onSelectEvent }) {
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-            <div className="h-6 w-px bg-primary/20 mx-1" />
-            <button
-              onClick={handleLanguageToggle}
-              className="flex items-center gap-1 px-2 py-1 hover:bg-primary/10 rounded-lg transition-colors text-sm font-bold text-primary"
-            >
-              {i18n.language.toUpperCase()}
-              <Globe className="w-5 h-5" />
-            </button>
-          </div>
         </div>
       </header>
 

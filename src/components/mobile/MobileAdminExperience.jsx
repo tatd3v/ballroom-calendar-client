@@ -28,7 +28,7 @@ import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
 export default function MobileAdminExperience() {
   const { t, i18n } = useTranslation()
   const { user } = useAuth()
-  const { rawEvents, cities, cityColors, selectedCity, setSelectedCity, loading, deleteEvent } = useEvents()
+  const { events, cities, cityColors, selectedCity, setSelectedCity, loading, deleteEvent } = useEvents()
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
@@ -49,16 +49,16 @@ export default function MobileAdminExperience() {
 
   const managedEventsCount = useMemo(() => {
     if (!user) return 0
-    if (user.role === 'admin') return rawEvents.length
-    return rawEvents.filter(event => event.city === user.city).length
-  }, [rawEvents, user])
+    if (user.role === 'admin') return (events || []).length
+    return (events || []).filter(event => event.city === user.city).length
+  }, [events, user])
 
   const scopedEvents = useMemo(() => {
     if (!user) return []
 
     const baseEvents = user.role === 'admin'
-      ? (selectedCity === 'all' ? rawEvents : rawEvents.filter(event => event.city === selectedCity))
-      : rawEvents.filter(event => event.city === user.city)
+      ? (selectedCity === 'all' ? (events || []) : (events || []).filter(event => event.city === selectedCity))
+      : (events || []).filter(event => event.city === user.city)
 
     const today = new Date()
     today.setHours(0, 0, 0, 0)
@@ -85,7 +85,7 @@ export default function MobileAdminExperience() {
         const dateB = b.date ? new Date(b.date).getTime() : 0
         return dateA - dateB
       })
-  }, [user, rawEvents, selectedCity, locale, t])
+  }, [user, events, selectedCity, locale, t])
 
   const filteredEvents = useMemo(() => {
     const normalizedSearch = searchTerm.trim().toLowerCase()
@@ -205,23 +205,6 @@ export default function MobileAdminExperience() {
                 <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">{managedEventsCount} {t('admin.totalEvents')}</p>
               </div>
             </div>
-          </div>
-          <div className="flex items-center gap-2">
-            <button
-              onClick={toggleTheme}
-              className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-              aria-label="Toggle theme"
-            >
-              {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
-            </button>
-            <div className="h-6 w-px bg-primary/20 mx-1" />
-            <button
-              onClick={handleLanguageToggle}
-              className="flex items-center gap-1 px-2 py-1 hover:bg-primary/10 rounded-lg transition-colors text-sm font-bold text-primary"
-            >
-              {i18n.language.toUpperCase()}
-              <Globe className="w-5 h-5" />
-            </button>
           </div>
         </div>
       </header>
