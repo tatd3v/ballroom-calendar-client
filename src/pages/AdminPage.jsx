@@ -1,5 +1,5 @@
-import { useState, useRef, useEffect } from 'react'
-import { Navigate } from 'react-router-dom'
+import { useState, useRef, useEffect, useCallback } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useEvents } from '../context/EventContext'
@@ -33,6 +33,7 @@ export default function AdminPage() {
   const { events, cities, cityColors, selectedCity, setSelectedCity, addEvent, updateEvent, deleteEvent } = useEvents()
   const { t, i18n } = useTranslation()
   const isMobile = useMobile()
+  const location = useLocation()
   
   // State hooks
   const [editingEvent, setEditingEvent] = useState(null)
@@ -78,13 +79,36 @@ export default function AdminPage() {
     setCurrentPage(1)
   }, [selectedCity, events?.length])
 
+  const handleEdit = useCallback((event) => {
+    setFormData({
+      title: event.title,
+      city: event.city,
+      start: event.start,
+      end: event.end || '',
+      description: event.description || '',
+      imageUrl: event.imageUrl || ''
+    })
+    setImagePreview(event.imageUrl || null)
+    setEditingEvent(event)
+    setShowForm(true)
+  }, [])
+
+  // Handle edit state from navigation
+  useEffect(() => {
+    if (location.state?.editingEvent) {
+      handleEdit(location.state.editingEvent)
+      // Clear the state to prevent re-triggering
+      window.history.replaceState({}, document.title)
+    }
+  }, [location.state, handleEdit])
+
   if (!user) {
     return <Navigate to="/login" replace />
   }
   
   // Move mobile check to the end after all hooks have been called
   if (isMobile) {
-    return <MobileAdminExperience />
+    return <MobileAdminExperience initialEditEvent={location.state?.editingEvent} />
   }
 
   const availableCities = user.role === 'admin' ? cities : [user.city]
@@ -202,20 +226,6 @@ export default function AdminPage() {
     } catch (err) {
       showToast(err.message || t('admin.somethingWrong'), 'error')
     }
-  }
-
-  const handleEdit = (event) => {
-    setFormData({
-      title: event.title,
-      city: event.city,
-      start: event.start,
-      end: event.end || '',
-      description: event.description || '',
-      imageUrl: event.imageUrl || ''
-    })
-    setImagePreview(event.imageUrl || null)
-    setEditingEvent(event)
-    setShowForm(true)
   }
 
   const handleDelete = async (id) => {
