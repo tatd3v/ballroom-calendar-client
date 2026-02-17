@@ -271,26 +271,319 @@ const apiCall = async (url, options = {}) => {
 
 ## 🚀 Deployment
 
-### Static Hosting
+### Frontend Deployment (Static Hosting)
+
+#### Netlify (Recommended)
 ```bash
 # Build for production
 npm run build
 
-# Deploy dist folder to:
-- Netlify
-- Vercel  
-- GitHub Pages
-- Cloudflare Pages
+# Deploy dist folder to Netlify
+# 1. Connect repository to Netlify
+# 2. Set build command: npm run build
+# 3. Set publish directory: dist
+# 4. Add environment variables:
+#    - VITE_API_URL=https://your-domain.com/api
+
+# Deploy using Netlify CLI (optional)
+npm install -g netlify-cli
+netlify login
+netlify link
+netlify deploy --prod --dir=dist
 ```
 
-### Environment Configuration
-```javascript
-// API base URL (relative for same domain)
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+#### Alternative Static Hosting
+```bash
+# Other options for static hosting:
+# - Vercel: vercel --prod
+# - GitHub Pages: gh-pages branch
+# - Cloudflare Pages: wrangler pages deploy dist
+```
 
-// PWA configuration
-const VITE_PWA_NAME = 'Ballroom Colombia'
-const VITE_PWA_SHORT_NAME = 'Ballroom'
+### Backend Deployment (Docker + EC2)
+
+#### Prerequisites
+- AWS EC2 instance (Ubuntu 20.04+)
+- Docker & Docker Compose installed
+- Domain name (optional)
+- SSL certificate (optional)
+
+#### Step 1: Build Docker Image Locally
+```bash
+# Navigate to server directory
+cd transmarical-server
+
+# Build Docker image
+docker build -t ballroom-api:latest .
+```
+
+#### Step 2: Push to Container Registry
+
+**Option A: Docker Hub**
+```bash
+# Tag image
+docker tag ballroom-api:latest yourusername/ballroom-api:latest
+
+# Login and push
+docker login
+docker push yourusername/ballroom-api:latest
+```
+
+**Option B: AWS ECR (Recommended)**
+```bash
+# Login to ECR
+aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 123456789012.dkr.ecr.us-east-1.amazonaws.com
+
+# Tag and push
+docker tag ballroom-api:latest 123456789012.dkr.ecr.us-east-1.amazonaws.com/ballroom-api:latest
+docker push 123456789012.dkr.ecr.us-east-1.amazonaws.com/ballroom-api:latest
+```
+
+#### Step 3: Configure EC2 Instance
+```bash
+# Connect to EC2
+ssh -i "your-key.pem" ec2-user@3.131.85.173
+
+# Create project directory
+mkdir -p /home/ec2-user/ballroom-calendar
+cd /home/ec2-user/ballroom-calendar
+
+# Create docker-compose.yml
+cat > docker-compose.yml << 'EOF'
+version: '3.8'
+
+services:
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf
+      - ./ssl:/etc/nginx/ssl
+    depends_on:
+      - api
+
+  api:
+    image: yourusername/ballroom-api:latest
+    environment:
+      - DATABASE_URL=postgresql://admin_db:R051t@16@postgres:5432/ballroom_colombia
+      - JWT_SECRET=your-super-secret-jwt-key
+      - CLOUDINARY_CLOUD_NAME=your-cloud-name
+      - CLOUDINARY_API_KEY=your-api-key
+      - CLOUDINARY_API_SECRET=your-api-secret
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15
+    environment:
+      - POSTGRES_DB=ballroom_colombia
+      - POSTGRES_USER=admin_db
+      - POSTGRES_PASSWORD=R051t@16
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+
+volumes:
+  postgres_data:
+EOF
+
+# Create nginx configuration
+cat > nginx.conf << 'EOF'
+events {
+    worker_connections 1024;
+}
+
+http {
+    upstream api {
+        server api:3001;
+    }
+
+    server {
+        listen 80;
+        server_name your-domain.com;
+
+        # Frontend static files (Netlify)
+        location / {
+            proxy_pass https://ballroom-kunty-cal.netlify.app;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+        }
+
+        # API routes
+        location /api/ {
+            proxy_pass http://api;
+            proxy_set_header Host $host;
+            proxy_set_header X-Real-IP $remote_addr;
+            proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        }
+
+        # API documentation
+        location /api-docs {
+            proxy_pass http://api;
+            proxy_set_header Host $host;
+        }
+    }
+}
+EOF
+```
+
+#### Step 4: Deploy to EC2
+```bash
+# Pull latest image
+docker-compose pull api
+
+# Start services
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs api
+```
+
+#### Step 5: Configure DNS & SSL
+```bash
+# Update DNS A-record to point to EC2 IP
+# Install SSL certificate with Let's Encrypt
+
+sudo apt update
+sudo apt install certbot python3-certbot-nginx
+
+# Get SSL certificate
+sudo certbot --nginx -d your-domain.com
+
+# Auto-renew SSL
+sudo crontab -e
+# Add: 0 12 * * * /usr/bin/certbot renew --quiet
+```
+
+#### Step 6: Verify Deployment
+```bash
+# Test API health
+curl http://localhost:3001/api/health
+
+# Test from external
+curl https://your-domain.com/api/health
+
+# Check nginx status
+sudo systemctl status nginx
+```
+
+### Alternative: Direct Git Deploy (Simpler)
+
+If you want to skip container registry:
+
+```bash
+# On EC2
+cd /home/ec2-user/ballroom-calendar
+
+# Pull latest code
+git pull origin main
+
+# Rebuild and restart
+docker-compose build api
+docker-compose up -d
+```
+
+### Environment Variables
+
+#### Backend (.env)
+```bash
+# Database
+DATABASE_URL="postgresql://admin_db:R051t@16@postgres:5432/ballroom_colombia"
+
+# JWT
+JWT_SECRET="your-super-secret-jwt-key"
+
+# Server
+PORT=3001
+NODE_ENV=production
+
+# Cloudinary
+CLOUDINARY_CLOUD_NAME="your-cloud-name"
+CLOUDINARY_API_KEY="your-api-key"
+CLOUDINARY_API_SECRET="your-api-secret"
+```
+
+#### Frontend (.env)
+```bash
+# Production
+VITE_API_URL=https://your-domain.com/api
+
+# Development
+VITE_API_URL=/api
+```
+
+### Deployment Checklist
+
+- [ ] Frontend built and deployed
+- [ ] Backend Docker image pushed
+- [ ] EC2 security groups configured (ports 80, 443, 22)
+- [ ] DNS records updated
+- [ ] SSL certificate installed
+- [ ] Environment variables set
+- [ ] Database initialized
+- [ ] API health check passing
+- [ ] Frontend API calls working
+- [ ] Image upload functionality tested
+
+### Monitoring & Maintenance
+
+```bash
+# Check container status
+docker-compose ps
+
+# View logs
+docker-compose logs -f api
+
+# Restart services
+docker-compose restart
+
+# Update image
+docker-compose pull && docker-compose up -d
+
+# Backup database
+docker-compose exec postgres pg_dump -U admin_db ballroom_colombia > backup.sql
+```
+
+### Troubleshooting
+
+#### Container Won't Start
+```bash
+# Check logs
+docker-compose logs api
+
+# Check environment variables
+docker-compose config
+
+# Rebuild image
+docker-compose build --no-cache api
+```
+
+#### Database Connection Issues
+```bash
+# Test database connection
+docker-compose exec postgres psql -U admin_db -d ballroom_colombia
+
+# Check network
+docker network ls
+docker network inspect ballroom-calendar_default
+```
+
+#### SSL Certificate Issues
+```bash
+# Check certificate status
+sudo certbot certificates
+
+# Renew certificate
+sudo certbot renew
+
+# Test nginx config
+sudo nginx -t
 ```
 
 ## 📱 Mobile Optimization
