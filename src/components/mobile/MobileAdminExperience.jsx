@@ -150,8 +150,8 @@ export default function MobileAdminExperience({ initialEditEvent }) {
       if (!response.ok) throw new Error('Upload failed')
 
       const data = await response.json()
-      setFormData({ ...formData, imageUrl: data.url })
-      setImagePreview(data.url)
+      setFormData({ ...formData, imageUrl: data.imageUrl })
+      setImagePreview(data.imageUrl)
     } catch (error) {
       console.error('Image upload failed:', error)
       setFormErrors({ ...formErrors, image: 'Failed to upload image. Please try again.' })
