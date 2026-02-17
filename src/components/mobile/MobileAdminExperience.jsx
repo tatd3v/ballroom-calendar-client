@@ -541,11 +541,6 @@ export default function MobileAdminExperience({ initialEditEvent }) {
                   <span>{formatTimeWithMeridiem(event.time)}</span>
                 </div>
               )}
-              {event.description && (
-                <p className="text-sm text-ink/70 dark:text-white/70 line-clamp-3">
-                  {event.description}
-                </p>
-              )}
             </div>
 
           </div>
