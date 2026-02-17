@@ -14,6 +14,7 @@ import {
   ArrowRight,
   Sparkles,
   Menu,
+  X,
   Sun,
   Moon,
   Globe,
@@ -66,7 +67,6 @@ export default function LoginPage() {
 
   const menuSections = useMemo(() => {
     const items = [
-      { id: 'explore', label: t('mobile.menu.explore', { defaultValue: 'Explore' }), icon: Compass, onClick: () => handleNavigate('/') },
       { id: 'events', label: t('mobile.menu.events', { defaultValue: 'Events' }), icon: CalendarDays, onClick: () => handleNavigate('/') },
     ]
     if (user) {
