@@ -33,7 +33,6 @@ export default defineConfig({
           ui: ['lucide-react'],
           i18n: ['react-i18next'],
           calendar: ['@fullcalendar/react', '@fullcalendar/daygrid', '@fullcalendar/timegrid', '@fullcalendar/list', '@fullcalendar/interaction'],
-          utils: ['date-fns'],
         },
       },
     },
@@ -51,16 +50,7 @@ export default defineConfig({
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
-          {
-            src: 'pwa-192x192.png',
-            sizes: '192x192',
-            type: 'image/png',
-          },
-          {
-            src: 'pwa-512x512.png',
-            sizes: '512x512',
-            type: 'image/png',
-          },
+          // Icons temporarily removed - add pwa-192x192.png and pwa-512x512.png to public folder when available
         ],
       },
       workbox: {
