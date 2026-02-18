@@ -22,6 +22,22 @@ export default defineConfig({
         "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
     },
   },
+  build: {
+    chunkSizeWarningLimit: 1000,
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          // Vendor chunks
+          vendor: ['react', 'react-dom'],
+          router: ['react-router-dom'],
+          ui: ['lucide-react'],
+          i18n: ['react-i18next'],
+          calendar: ['@fullcalendar/react', '@fullcalendar/daygrid', '@fullcalendar/timegrid', '@fullcalendar/list', '@fullcalendar/interaction'],
+          utils: ['date-fns'],
+        },
+      },
+    },
+  },
   plugins: [
     react(),
     VitePWA({
