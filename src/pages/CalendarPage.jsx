@@ -1,34 +1,31 @@
 import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import EventCalendar from '../components/EventCalendar'
 import CityFilter from '../components/CityFilter'
-import EventModal from '../components/EventModal'
 import MobileCalendarExperience from '../components/mobile/MobileCalendarExperience'
 import { useEvents } from '../context/EventContext'
 import { CalendarDays, TrendingUp } from 'lucide-react'
 import useMobile from '../hooks/useMobile'
+import { getEventUrl } from '../utils/slugify'
 
 export default function CalendarPage() {
-  const [selectedEvent, setSelectedEvent] = useState(null)
+  const navigate = useNavigate()
   const isMobile = useMobile()
   const { filteredEvents, selectedCity, loading, events } = useEvents()
   const { t } = useTranslation()
 
   const handleEventClick = (event) => {
-    setSelectedEvent(event)
+    const eventData = event.extendedProps || event
+    if (eventData.id) {
+      navigate(getEventUrl(eventData))
+    }
   }
 
   const upcomingCount = filteredEvents.filter(e => new Date(e.start) >= new Date()).length
 
   if (isMobile) {
-    return (
-      <>
-        <MobileCalendarExperience onSelectEvent={handleEventClick} />
-        {selectedEvent && (
-          <EventModal event={selectedEvent} onClose={() => setSelectedEvent(null)} />
-        )}
-      </>
-    )
+    return <MobileCalendarExperience />
   }
 
   return (
