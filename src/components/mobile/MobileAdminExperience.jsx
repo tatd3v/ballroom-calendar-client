@@ -1,35 +1,29 @@
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
   CalendarDays,
-  BarChart3,
-  Users,
   Settings,
   Plus,
   Menu,
   Search,
   MoreVertical,
   MapPin,
-  Compass,
   Clock,
-  Sun,
-  Moon,
-  Globe,
-  X,
-  Save,
-  Upload,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useEvents } from '../../context/EventContext'
 import { useTheme } from '../../context/ThemeContext'
 import MobileExperienceMenu from './MobileExperienceMenu'
-import BottomNavItem from './BottomNavItem'
-import MobileFormInput from './MobileFormInput'
-import MobileFormTextarea from './MobileFormTextarea'
-import MobileFormSelect from './MobileFormSelect'
-import { formatTimeWithMeridiem, formatDateWithLocale, parseDateOnlyToLocal } from '../../utils/time'
-import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
+import MobileEventFormModal from './MobileEventFormModal'
+import { formatTimeWithMeridiem, formatDateWithLocale } from '../../utils/time'
+import { getLocaleCode } from '../../utils/locale'
+import { InlineLoader } from '../ui/CustomLoader'
+import { useEventForm } from '../../hooks/useEventForm'
+import { useImageUpload } from '../../hooks/useImageUpload'
+import { useEventFilters } from '../../hooks/useEventFilters'
+import { useMobileMenuSections } from '../../hooks/useMobileMenuSections'
+import { eventToFormData, formDataToEvent, createEmptyForm } from '../../utils/eventHelpers'
 
 export default function MobileAdminExperience({ initialEditEvent }) {
   const { t, i18n } = useTranslation()
@@ -38,24 +32,30 @@ export default function MobileAdminExperience({ initialEditEvent }) {
   const { theme, toggleTheme } = useTheme()
   const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
-  const [activeTab, setActiveTab] = useState('events')
   const [activeFilter, setActiveFilter] = useState('live')
   const [searchTerm, setSearchTerm] = useState('')
   const [openMenuId, setOpenMenuId] = useState(null)
   const [editingEvent, setEditingEvent] = useState(null)
   const [showEditForm, setShowEditForm] = useState(false)
-  const [formData, setFormData] = useState({
-    title: '',
-    city: '',
-    start: '',
-    time: '',
-    location: '',
-    description: '',
-    imageUrl: ''
-  })
-  const [imagePreview, setImagePreview] = useState(null)
-  const [uploadingImage, setUploadingImage] = useState(false)
-  const [formErrors, setFormErrors] = useState({})
+
+  // Use custom hooks for form and image management
+  const {
+    formData,
+    setFormData,
+    imagePreview,
+    setImagePreview,
+    formErrors,
+    setError,
+    clearAllErrors,
+    resetForm
+  } = useEventForm()
+
+  const {
+    uploading: uploadingImage,
+    uploadImage,
+    removeImage: removeImageUpload,
+    setPreview: setImageUploadPreview
+  } = useImageUpload()
 
   const goTo = useCallback((path) => {
     navigate(path)
@@ -64,116 +64,57 @@ export default function MobileAdminExperience({ initialEditEvent }) {
   // Handle initial edit event from navigation
   useEffect(() => {
     if (initialEditEvent) {
+      const formDataFromEvent = eventToFormData(initialEditEvent)
       setEditingEvent(initialEditEvent)
-      setFormData({
-        title: initialEditEvent.title || '',
-        city: initialEditEvent.city || '',
-        start: initialEditEvent.start || initialEditEvent.date || '',
-        time: initialEditEvent.time || '',
-        location: initialEditEvent.location || '',
-        description: initialEditEvent.description || '',
-        imageUrl: initialEditEvent.imageUrl || ''
-      })
+      setFormData(formDataFromEvent)
       setImagePreview(initialEditEvent.imageUrl || null)
+      setImageUploadPreview(initialEditEvent.imageUrl || null)
       setShowEditForm(true)
-      // Clear the navigation state
       window.history.replaceState({}, document.title)
     }
-  }, [initialEditEvent])
+  }, [initialEditEvent, setFormData, setImagePreview, setImageUploadPreview])
 
-  const handleEdit = (event) => {
+  const handleEdit = useCallback((event) => {
+    const formDataFromEvent = eventToFormData(event)
     setEditingEvent(event)
-    setFormData({
-      title: event.title || '',
-      city: event.city || '',
-      start: event.start || event.date || '',
-      time: event.time || '',
-      location: event.location || '',
-      description: event.description || '',
-      imageUrl: event.imageUrl || ''
-    })
+    setFormData(formDataFromEvent)
     setImagePreview(event.imageUrl || null)
+    setImageUploadPreview(event.imageUrl || null)
     setShowEditForm(true)
     setOpenMenuId(null)
-  }
+  }, [setFormData, setImagePreview, setImageUploadPreview])
 
-  const handleCloseEditForm = () => {
+  const handleCloseEditForm = useCallback(() => {
     setEditingEvent(null)
     setShowEditForm(false)
-    setFormData({
-      title: '',
-      city: '',
-      start: '',
-      time: '',
-      location: '',
-      description: '',
-      imageUrl: ''
-    })
-    setImagePreview(null)
-    setFormErrors({})
-  }
+    resetForm()
+    removeImageUpload()
+  }, [resetForm, removeImageUpload])
 
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0]
+  const handleImageUpload = useCallback(async (e) => {
+    const file = e.target.files?.[0]
     if (!file) return
 
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-    if (!allowedTypes.includes(file.type)) {
-      setFormErrors({ ...formErrors, image: 'Invalid file type. Only JPEG, PNG, and WebP are allowed.' })
-      return
+    const result = await uploadImage(file)
+    if (result.success) {
+      setFormData({ ...formData, imageUrl: result.url })
+      setImagePreview(result.url)
+    } else {
+      setError('image', result.error)
     }
+  }, [uploadImage, formData, setFormData, setImagePreview, setError])
 
-    if (file.size > 5 * 1024 * 1024) {
-      setFormErrors({ ...formErrors, image: 'File size must be less than 5MB' })
-      return
-    }
-
-    setUploadingImage(true)
-    setFormErrors({ ...formErrors, image: null })
-
-    try {
-      const formDataUpload = new FormData()
-      formDataUpload.append('image', file)
-
-      const token = localStorage.getItem('calendar_token')
-      const headers = {}
-      if (token) {
-        headers['Authorization'] = `Bearer ${token}`
-      }
-
-      const response = await fetch('/api/events/upload-image', {
-        method: 'POST',
-        headers,
-        body: formDataUpload,
-      })
-
-      if (!response.ok) throw new Error('Upload failed')
-
-      const data = await response.json()
-      setFormData({ ...formData, imageUrl: data.imageUrl })
-      setImagePreview(data.imageUrl)
-    } catch (error) {
-      console.error('Image upload failed:', error)
-      setFormErrors({ ...formErrors, image: 'Failed to upload image. Please try again.' })
-    } finally {
-      setUploadingImage(false)
-    }
-  }
-
-  const handleRemoveImage = () => {
+  const handleRemoveImage = useCallback(() => {
     setFormData({ ...formData, imageUrl: '' })
-    setImagePreview(null)
-  }
+    removeImageUpload()
+  }, [formData, setFormData, removeImageUpload])
 
-  const handleSubmit = async (e) => {
+  const handleSubmit = useCallback(async (e) => {
     e.preventDefault()
-    setFormErrors({})
+    clearAllErrors()
 
     try {
-      const eventData = {
-        ...formData,
-        date: formData.start,
-      }
+      const eventData = formDataToEvent(formData)
 
       if (editingEvent) {
         await updateEvent(editingEvent.id, eventData)
@@ -182,14 +123,9 @@ export default function MobileAdminExperience({ initialEditEvent }) {
       }
       handleCloseEditForm()
     } catch (error) {
-      console.error('Failed to save event:', error)
-      setFormErrors({ submit: t('mobile.failedSave') })
+      setError('submit', error.message || t('admin.saveFailed', 'Failed to save event. Please try again.'))
     }
-  }
-
-  const handleLanguageToggle = () => {
-    changeAppLanguage(i18n, i18n.language === 'es' ? 'en' : 'es')
-  }
+  }, [formData, editingEvent, updateEvent, addEvent, handleCloseEditForm, clearAllErrors, setError, t])
 
   const locale = getLocaleCode(i18n.language)
 
@@ -199,54 +135,34 @@ export default function MobileAdminExperience({ initialEditEvent }) {
     return (events || []).filter(event => event.city === user.city).length
   }, [events, user])
 
-  const scopedEvents = useMemo(() => {
-    if (!user) return []
+  // Use custom hook for event filtering
+  const filteredEvents = useEventFilters(events, {
+    searchTerm,
+    statusFilter: activeFilter,
+    cityFilter: selectedCity,
+    userCity: user?.city,
+    userRole: user?.role
+  })
 
-    const baseEvents = user.role === 'admin'
-      ? (selectedCity === 'all' ? (events || []) : (events || []).filter(event => event.city === selectedCity))
-      : (events || []).filter(event => event.city === user.city)
-
-    const today = new Date()
-    today.setHours(0, 0, 0, 0)
-
-    const formatDate = (event) => {
-      return formatDateWithLocale(event?.date, {
+  // Add display date to filtered events
+  const displayEvents = useMemo(() => {
+    return filteredEvents.map(event => ({
+      ...event,
+      displayDate: formatDateWithLocale(event?.date, {
         locale,
         fallbackLabel: t('admin.dateTBA')
       })
-    }
+    }))
+  }, [filteredEvents, locale, t])
 
-    return baseEvents
-      .map(event => {
-        const startDate = event.date ? parseDateOnlyToLocal(event.date) : null
-        const status = startDate && !Number.isNaN(startDate.getTime()) && startDate < today ? 'past' : 'live'
-        return {
-          ...event,
-          status,
-          displayDate: formatDate(event)
-        }
-      })
-      .sort((a, b) => {
-        const dateA = a.date ? parseDateOnlyToLocal(a.date)?.getTime() || 0 : 0
-        const dateB = b.date ? parseDateOnlyToLocal(b.date)?.getTime() || 0 : 0
-        return dateA - dateB
-      })
-  }, [user, events, selectedCity, locale, t])
-
-  const filteredEvents = useMemo(() => {
-    const normalizedSearch = searchTerm.trim().toLowerCase()
-
-    return scopedEvents.filter(event => {
-      const matchesFilter = activeFilter === 'all' ? true : event.status === activeFilter
-      const matchesSearch = !normalizedSearch
-        ? true
-        : [event.title, event.city, event.location]
-            .filter(Boolean)
-            .some(value => value.toLowerCase().includes(normalizedSearch))
-
-      return matchesFilter && matchesSearch
-    })
-  }, [scopedEvents, activeFilter, searchTerm])
+  // Use custom hook for menu sections
+  const menuSections = useMobileMenuSections({
+    user,
+    navigate,
+    logout: () => navigate('/login'),
+    t,
+    showAdminLink: false
+  })
 
   useEffect(() => {
     if (!openMenuId) return
@@ -301,58 +217,28 @@ export default function MobileAdminExperience({ initialEditEvent }) {
     }
   }
 
-  const menuSections = useMemo(() => {
-    return [
-      {
-        id: 'admin-nav',
-        title: t('nav.admin'),
-        items: [
-          {
-            id: 'overview',
-            label: t('admin.manageEvents'),
-            icon: CalendarDays,
-            onClick: () => goTo('/admin')
-          },
-          {
-            id: 'new',
-            label: t('admin.addEvent'),
-            icon: Plus,
-            onClick: () => goTo('/admin/events/new')
-          },
-          {
-            id: 'calendar',
-            label: t('calendar.title'),
-            icon: Compass,
-            onClick: () => goTo('/')
-          }
-        ]
-      }
-    ]
-  }, [goTo, t])
 
   return (
     <div className="font-display dark:bg-background-dark text-ink dark:text-white min-h-screen pb-28">
       {/* Header — matches calendar mobile navbar */}
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
         <div className="flex items-center justify-between px-4 h-16">
-          <div className="flex items-center gap-3">
-            <button
-              className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-              aria-label={t('mobile.openMenu')}
-              onClick={() => setMenuOpen(true)}
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                <Settings className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-bold text-lg tracking-tight text-ink dark:text-white">{t('admin.manageEvents')}</h1>
-                <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">{managedEventsCount} {t('admin.totalEvents')}</p>
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+              <Settings className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="font-bold text-lg tracking-tight text-ink dark:text-white">{t('admin.manageEvents')}</h1>
+              <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">{managedEventsCount} {t('admin.totalEvents')}</p>
             </div>
           </div>
+          <button
+            className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+            aria-label={t('mobile.openMenu')}
+            onClick={() => setMenuOpen(true)}
+          >
+            <Menu className="w-6 h-6" />
+          </button>
         </div>
       </header>
 
@@ -547,173 +433,34 @@ export default function MobileAdminExperience({ initialEditEvent }) {
         ))}
       </main>
 
-      {/* Edit Form Modal */}
-      {showEditForm && (
-        <div className="fixed inset-0 z-50 bg-black/50 backdrop-blur-sm flex items-end" onClick={handleCloseEditForm}>
-          <div 
-            className="w-full bg-white dark:bg-background-dark rounded-t-3xl max-h-[90vh] overflow-y-auto"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {/* Header */}
-            <div className="sticky top-0 bg-white dark:bg-background-dark border-b border-lavender/20 dark:border-ink/20 px-4 py-4 flex items-center justify-between z-10">
-              <div className="flex items-center gap-2">
-                <div className="w-1 h-6 rounded-full bg-gradient-to-b from-primary to-orange" />
-                <h2 className="text-xl font-bold text-ink dark:text-white">
-                  {editingEvent ? t('admin.editEvent', 'Edit Event') : t('admin.newEvent', 'New Event')}
-                </h2>
-              </div>
-              <button
-                onClick={handleCloseEditForm}
-                className="p-2 rounded-full hover:bg-lavender/20 dark:hover:bg-white/10 transition-colors"
-                aria-label={t('mobile.close')}
-              >
-                <X className="w-5 h-5 text-ink/60 dark:text-white/60" />
-              </button>
-            </div>
+      {/* Edit Form Modal - Using reusable component */}
+      <MobileEventFormModal
+        show={showEditForm}
+        editingEvent={editingEvent}
+        formData={formData}
+        onFormDataChange={setFormData}
+        imagePreview={imagePreview}
+        uploadingImage={uploadingImage}
+        formErrors={formErrors}
+        cities={user?.role === 'admin' ? cities : [user?.city]}
+        userRole={user?.role}
+        onClose={handleCloseEditForm}
+        onSubmit={handleSubmit}
+        onImageUpload={handleImageUpload}
+        onImageRemove={handleRemoveImage}
+      />
 
-            {/* Form */}
-            <form onSubmit={handleSubmit} className="p-4 space-y-4">
-              {formErrors.submit && (
-                <div className="p-3 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/30 rounded-xl text-sm text-red-600 dark:text-red-400">
-                  {formErrors.submit}
-                </div>
-              )}
-
-              <MobileFormInput
-                label={t('admin.title', 'Event Title')}
-                value={formData.title}
-                onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                placeholder={t('admin.eventTitle', 'Enter event title')}
-                required
-                error={formErrors.title}
-              />
-
-              <MobileFormSelect
-                label={t('admin.city', 'City')}
-                value={formData.city}
-                onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                options={user?.role === 'admin' ? cities : [user?.city]}
-                required
-                error={formErrors.city}
-              />
-
-              <div className="grid grid-cols-2 gap-3">
-                <MobileFormInput
-                  label={t('admin.startDate', 'Date')}
-                  type="date"
-                  value={formData.start}
-                  onChange={(e) => setFormData({ ...formData, start: e.target.value })}
-                  required
-                  error={formErrors.start}
-                />
-
-                <MobileFormInput
-                  label={t('admin.time', 'Time')}
-                  type="time"
-                  value={formData.time}
-                  onChange={(e) => setFormData({ ...formData, time: e.target.value })}
-                  error={formErrors.time}
-                />
-              </div>
-
-              <MobileFormInput
-                label={t('admin.location', 'Location')}
-                value={formData.location}
-                onChange={(e) => setFormData({ ...formData, location: e.target.value })}
-                placeholder={t('admin.eventLocation', 'Enter venue or location')}
-                error={formErrors.location}
-              />
-
-              <MobileFormTextarea
-                label={t('admin.description', 'Description')}
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                placeholder={t('admin.eventDescription', 'Enter event description')}
-                rows={4}
-                error={formErrors.description}
-              />
-
-              {/* Image Upload */}
-              <div>
-                <label className="block text-sm font-semibold text-ink dark:text-white mb-2">
-                  {t('admin.eventImage', 'Event Image')}
-                </label>
-                
-                {imagePreview ? (
-                  <div className="relative">
-                    <img 
-                      src={imagePreview} 
-                      alt="Event preview" 
-                      className="w-full h-48 object-cover rounded-xl border border-lavender-100 dark:border-white/10"
-                    />
-                    <button
-                      type="button"
-                      onClick={handleRemoveImage}
-                      className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors shadow-lg"
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-                ) : (
-                  <div className="border-2 border-dashed border-lavender-200 dark:border-white/20 rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
-                    <input
-                      type="file"
-                      id="mobile-image-upload"
-                      accept="image/jpeg,image/jpg,image/png,image/webp"
-                      onChange={handleImageUpload}
-                      className="hidden"
-                      disabled={uploadingImage}
-                    />
-                    <label 
-                      htmlFor="mobile-image-upload" 
-                      className={`cursor-pointer flex flex-col items-center gap-3 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
-                    >
-                      {uploadingImage ? (
-                        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-                      ) : (
-                        <Upload className="w-8 h-8 text-ink/40 dark:text-white/40" />
-                      )}
-                      <div className="text-sm">
-                        <span className="text-primary font-semibold">
-                          {uploadingImage ? t('admin.uploading', 'Uploading...') : t('admin.clickToUpload', 'Click to upload')}
-                        </span>
-                        <span className="text-ink/40 dark:text-white/40 ml-1">
-                          {t('admin.orDragDrop', 'or drag and drop')}
-                        </span>
-                      </div>
-                      <p className="text-xs text-ink/40 dark:text-white/40">
-                        PNG, JPG, WebP {t('admin.upTo', 'up to')} 5MB
-                      </p>
-                    </label>
-                  </div>
-                )}
-                {formErrors.image && (
-                  <p className="mt-1 text-xs text-red-500 dark:text-red-400">{formErrors.image}</p>
-                )}
-              </div>
-
-              {/* Action Buttons */}
-              <div className="flex gap-3 pt-2 sticky bottom-0 bg-white dark:bg-background-dark pb-4">
-                <button
-                  type="button"
-                  onClick={handleCloseEditForm}
-                  className="flex-1 flex items-center justify-center gap-2 px-4 py-3 border border-lavender-100 dark:border-white/10 rounded-xl text-sm font-semibold text-ink dark:text-white hover:bg-lavender/10 dark:hover:bg-white/5 transition-all"
-                >
-                  <X className="w-4 h-4" />
-                  {t('admin.cancel', 'Cancel')}
-                </button>
-                <button
-                  type="submit"
-                  className="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-primary to-primary/90 text-white px-4 py-3 rounded-xl text-sm font-bold shadow-lg shadow-primary/20 hover:shadow-xl hover:shadow-primary/30 transition-all active:scale-[0.98]"
-                >
-                  <Save className="w-4 h-4" />
-                  {editingEvent ? t('admin.update', 'Update') : t('admin.create', 'Create')}
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
+      <MobileExperienceMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        title={t('admin.manageEvents')}
+        subtitle={`${managedEventsCount} ${t('admin.totalEvents')}`}
+        sections={menuSections}
+        showUserCard={Boolean(user)}
+        userName={user?.name}
+        userEmail={user?.email}
+        userRole={user?.role}
+      />
 
       {/* Bottom Navigation (temporarily disabled until actions are defined)
       <nav className="fixed bottom-0 w-full bg-white dark:bg-background-dark border-t border-primary/10 px-6 py-3 pb-6 z-40">
