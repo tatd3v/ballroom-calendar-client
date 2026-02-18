@@ -183,7 +183,7 @@ export default function MobileAdminExperience({ initialEditEvent }) {
       handleCloseEditForm()
     } catch (error) {
       console.error('Failed to save event:', error)
-      setFormErrors({ submit: error.message || 'Failed to save event. Please try again.' })
+      setFormErrors({ submit: t('mobile.failedSave') })
     }
   }
 
@@ -338,7 +338,7 @@ export default function MobileAdminExperience({ initialEditEvent }) {
           <div className="flex items-center gap-3">
             <button
               className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-              aria-label="Open menu"
+              aria-label={t('mobile.openMenu')}
               onClick={() => setMenuOpen(true)}
             >
               <Menu className="w-6 h-6" />
@@ -565,7 +565,7 @@ export default function MobileAdminExperience({ initialEditEvent }) {
               <button
                 onClick={handleCloseEditForm}
                 className="p-2 rounded-full hover:bg-lavender/20 dark:hover:bg-white/10 transition-colors"
-                aria-label="Close"
+                aria-label={t('mobile.close')}
               >
                 <X className="w-5 h-5 text-ink/60 dark:text-white/60" />
               </button>

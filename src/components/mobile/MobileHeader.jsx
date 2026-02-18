@@ -43,7 +43,7 @@ export default function MobileHeader({
         <div className="flex items-center gap-3">
           <button
             className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-            aria-label="Open menu"
+            aria-label={t('mobile.openMenu')}
             onClick={onMenuToggle}
           >
             {menuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
@@ -68,7 +68,7 @@ export default function MobileHeader({
             <button
               onClick={onThemeToggle || (() => {})}
               className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-              aria-label="Toggle theme"
+              aria-label={t('mobile.toggleTheme')}
             >
               {theme === 'dark' ? <Sun className="w-5 h-5" /> : <Moon className="w-5 h-5" />}
             </button>

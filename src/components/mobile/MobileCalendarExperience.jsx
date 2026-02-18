@@ -21,13 +21,14 @@ import MobileExperienceMenu from './MobileExperienceMenu'
 import BottomNavItem from './BottomNavItem'
 import { formatTimeWithMeridiem, parseDateOnlyToLocal } from '../../utils/time'
 import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
+import { getEventUrl } from '../../utils/slugify'
 
-export default function MobileCalendarExperience({ onSelectEvent }) {
+export default function MobileCalendarExperience() {
+  const navigate = useNavigate()
   const { filteredEvents, events, cities, cityColors, selectedCity, setSelectedCity, loading } = useEvents()
   const { theme, toggleTheme } = useTheme()
   const { i18n, t } = useTranslation()
   const { user } = useAuth()
-  const navigate = useNavigate()
   const [menuOpen, setMenuOpen] = useState(false)
 
   const locale = getLocaleCode(i18n.language)
@@ -93,17 +94,7 @@ export default function MobileCalendarExperience({ onSelectEvent }) {
   }
 
   const handleEventSelect = (event) => {
-    if (!onSelectEvent) return
-    onSelectEvent({
-      id: event.id,
-      title: event.title,
-      start: event.start,
-      end: event.end ?? null,
-      extendedProps: {
-        city: event.city,
-        description: event.description,
-      },
-    })
+    navigate(getEventUrl(event))
   }
 
   const activeCityColor = cityColors[selectedCity] || '#ED0086'
@@ -211,7 +202,7 @@ export default function MobileCalendarExperience({ onSelectEvent }) {
           <div className="flex items-center gap-3">
             <button
               className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-              aria-label="Open menu"
+              aria-label={t('mobile.openMenu')}
               onClick={() => setMenuOpen(true)}
             >
               <Menu className="w-6 h-6" />
@@ -304,16 +295,16 @@ export default function MobileCalendarExperience({ onSelectEvent }) {
           <button
             onClick={handleFabClick}
             className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center z-40 active:scale-90 transition-transform"
-            aria-label="Create or manage events"
+            aria-label={t('mobile.createOrManage')}
           >
             <Plus className="w-6 h-6" />
           </button>
 
           <nav className="fixed bottom-0 w-full bg-white dark:bg-background-dark border-t border-primary/10 px-6 py-3 pb-6 z-40">
             <div className="flex items-center justify-between max-w-md mx-auto">
-              <BottomNavItem icon={CalendarDays} label="Events" onClick={() => navigate('/')} />
-              <BottomNavItem icon={Bookmark} label="Saved" onClick={() => navigate('/admin')} />
-              <BottomNavItem icon={UserRound} label="Profile" onClick={() => navigate('/admin')} />
+              <BottomNavItem icon={CalendarDays} label={t('mobile.events')} onClick={() => navigate('/')} />
+              <BottomNavItem icon={Bookmark} label={t('mobile.saved')} onClick={() => navigate('/admin')} />
+              <BottomNavItem icon={UserRound} label={t('mobile.profile')} onClick={() => navigate('/admin')} />
             </div>
           </nav>
         </>
