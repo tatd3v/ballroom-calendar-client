@@ -1,21 +1,22 @@
-import { useState, useRef, useEffect, useCallback } from 'react'
-import { Navigate, useLocation } from 'react-router-dom'
+import { useState, useEffect, useCallback } from 'react'
+import { useNavigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useEvents } from '../context/EventContext'
 import { useTheme } from '../context/ThemeContext'
 import useMobile from '../hooks/useMobile'
-import MobileAdminExperience from '../components/mobile/MobileAdminExperience'
-import { formatTimeWithMeridiem, formatDateWithLocale, parseDateOnlyToLocal } from '../utils/time'
+import { InlineLoader } from '../components/ui/CustomLoader'
 import { 
   AlertTriangle, 
   CheckCircle, 
-  Calendar, 
+  CalendarDays, 
   MapPin, 
-  Plus, 
+  Clock,
+  Plus,
+  Search,
   Save, 
-  Edit2, 
-  Trash2,
+  Edit, 
+  Trash,
   ChevronLeft,
   ChevronRight,
   ChevronDown,
@@ -24,7 +25,8 @@ import {
   Settings,
   Filter,
   Upload,
-  Image
+  Image,
+  Star
 } from 'lucide-react'
 
 export default function AdminPage() {
@@ -462,7 +464,7 @@ export default function AdminPage() {
                     className={`cursor-pointer flex flex-col items-center gap-3 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
                   >
                     {uploadingImage ? (
-                      <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+                      <InlineLoader size="large" />
                     ) : (
                       <Upload className="w-8 h-8 text-ink-400 dark:text-ink-500" />
                     )}
@@ -590,14 +592,14 @@ export default function AdminPage() {
                           className="p-2 hover:bg-lavender/10 dark:hover:bg-white/10 rounded-lg text-ink-400 dark:text-ink-300 hover:text-ink dark:hover:text-white transition-colors"
                           title={t('admin.edit')}
                         >
-                          <Edit2 className="w-5 h-5" />
+                          <Edit className="w-5 h-5" />
                         </button>
                         <button
                           onClick={() => handleDelete(event.id)}
                           className="p-2 hover:bg-red-500/10 rounded-lg text-red-400 hover:text-red-500 transition-colors"
                           title={t('admin.delete')}
                         >
-                          <Trash2 className="w-5 h-5" />
+                          <Trash className="w-5 h-5" />
                         </button>
                       </div>
                     </td>

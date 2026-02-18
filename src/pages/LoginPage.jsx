@@ -1,21 +1,22 @@
-import { useState, useMemo } from 'react'
-import { Navigate, useNavigate } from 'react-router-dom'
+import { useState } from 'react'
+import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
-import { useTheme } from '../context/ThemeContext'
-import { useMobileMenu } from '../hooks/useMobileMenu'
+import { InlineLoader } from '../components/ui/CustomLoader'
+import useMobile from '../hooks/useMobileMenu'
 import MobileHeader from '../components/mobile/MobileHeader'
 import MobileExperienceMenu from '../components/mobile/MobileExperienceMenu'
 import MobilePreferences from '../components/mobile/MobilePreferences'
 import { 
+  UserRound, 
+  Lock, 
+  ArrowRight,
   CalendarDays, 
-  UserRound,
   Bookmark,
   Compass,
   AlertCircle,
   Mail,
   LockKeyhole,
-  ArrowRight,
   Sparkles
 } from 'lucide-react'
 
@@ -156,7 +157,7 @@ export default function LoginPage() {
           >
             {loading ? (
               <>
-                <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                <InlineLoader size="medium" />
                 {t('login.signingIn')}
               </>
             ) : (
