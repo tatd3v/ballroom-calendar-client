@@ -18,7 +18,6 @@ import { useEvents } from '../../context/EventContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import MobileExperienceMenu from './MobileExperienceMenu'
-import BottomNavItem from './BottomNavItem'
 import { formatTimeWithMeridiem, parseDateOnlyToLocal } from '../../utils/time'
 import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
 import { getEventUrl } from '../../utils/slugify'
@@ -104,14 +103,16 @@ export default function MobileCalendarExperience() {
   }
 
   const menuSections = useMemo(() => {
-    const baseItems = [
-      {
+    const baseItems = []
+
+    if (!user) {
+      baseItems.push({
         id: 'events',
         label: t('mobile.menu.events', { defaultValue: 'Events' }),
         icon: CalendarDays,
         onClick: () => handleNavigate('/'),
-      },
-    ]
+      })
+    }
 
     if (user) {
       baseItems.push({
@@ -188,7 +189,11 @@ export default function MobileCalendarExperience() {
   }
 
   const handleFabClick = () => {
-    navigate(user ? '/admin' : '/login')
+    if (user) {
+      navigate('/admin', { state: { openCreate: true } })
+    } else {
+      navigate('/login')
+    }
   }
 
   const handleLanguageToggle = () => {
@@ -199,24 +204,22 @@ export default function MobileCalendarExperience() {
     <div className="font-display dark:bg-background-dark text-ink dark:text-white min-h-screen pb-28">
       <header className="sticky top-0 z-40 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
         <div className="flex items-center justify-between px-4 h-16">
-          <div className="flex items-center gap-3">
-            <button
-              className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-              aria-label={t('mobile.openMenu')}
-              onClick={() => setMenuOpen(true)}
-            >
-              <Menu className="w-6 h-6" />
-            </button>
-            <div className="flex items-center gap-2">
-              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-                <CalendarDays className="w-5 h-5 text-white" />
-              </div>
-              <div>
-                <h1 className="font-bold text-lg tracking-tight text-ink dark:text-white">{t('calendar.title')}</h1>
-                <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">{t('nav.subtitle')}</p>
-              </div>
+          <div className="flex items-center gap-2">
+            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
+              <CalendarDays className="w-5 h-5 text-white" />
+            </div>
+            <div>
+              <h1 className="font-bold text-lg tracking-tight text-ink dark:text-white">{t('calendar.title')}</h1>
+              <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">{t('nav.subtitle')}</p>
             </div>
           </div>
+          <button
+            className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
+            aria-label={t('mobile.openMenu')}
+            onClick={() => setMenuOpen(true)}
+          >
+            <Menu className="w-6 h-6" />
+          </button>
         </div>
       </header>
 
@@ -291,23 +294,13 @@ export default function MobileCalendarExperience() {
       </main>
 
       {user && (
-        <>
-          <button
-            onClick={handleFabClick}
-            className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center z-40 active:scale-90 transition-transform"
-            aria-label={t('mobile.createOrManage')}
-          >
-            <Plus className="w-6 h-6" />
-          </button>
-
-          <nav className="fixed bottom-0 w-full bg-white dark:bg-background-dark border-t border-primary/10 px-6 py-3 pb-6 z-40">
-            <div className="flex items-center justify-between max-w-md mx-auto">
-              <BottomNavItem icon={CalendarDays} label={t('mobile.events')} onClick={() => navigate('/')} />
-              <BottomNavItem icon={Bookmark} label={t('mobile.saved')} onClick={() => navigate('/admin')} />
-              <BottomNavItem icon={UserRound} label={t('mobile.profile')} onClick={() => navigate('/admin')} />
-            </div>
-          </nav>
-        </>
+        <button
+          onClick={handleFabClick}
+          className="fixed bottom-24 right-6 w-14 h-14 bg-primary text-white rounded-full shadow-2xl shadow-primary/40 flex items-center justify-center z-40 active:scale-90 transition-transform"
+          aria-label={t('mobile.createOrManage')}
+        >
+          <Plus className="w-6 h-6" />
+        </button>
       )}
     </div>
   )

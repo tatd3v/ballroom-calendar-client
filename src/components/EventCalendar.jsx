@@ -17,9 +17,9 @@ export default function EventCalendar({ onEventClick, onDateSelect }) {
   const locale = i18n.language === 'es' ? 'es' : 'en'
 
   const handleEventClick = (info) => {
-    if (onEventClick) {
-      onEventClick(info.event)
-    }
+    if (!onEventClick) return
+    const rawEvent = info.event.extendedProps?.rawEvent
+    onEventClick(rawEvent || info.event)
   }
 
   const handleDateSelect = (info) => {
@@ -57,7 +57,8 @@ export default function EventCalendar({ onEventClick, onDateSelect }) {
             extendedProps: {
               city: e.city,
               description: e.description,
-              color: color
+              color,
+              rawEvent: e,
             }
           }
         })}
