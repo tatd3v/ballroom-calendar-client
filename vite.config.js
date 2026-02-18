@@ -13,7 +13,13 @@ export default defineConfig({
     },
     headers: {
       'Content-Security-Policy':
-        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https:; img-src 'self' data:; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+    },
+  },
+  preview: {
+    headers: {
+      'Content-Security-Policy':
+        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
     },
   },
   plugins: [
