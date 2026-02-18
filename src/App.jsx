@@ -1,5 +1,6 @@
 import { Routes, Route } from 'react-router-dom'
 import { Suspense, lazy } from 'react'
+import { useTranslation } from 'react-i18next'
 import { AuthProvider } from './context/AuthContext'
 import { EventProvider } from './context/EventContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -13,6 +14,8 @@ const LoginPage = lazy(() => import('./pages/LoginPage'))
 const EventDetailsPage = lazy(() => import('./pages/EventDetailsPage'))
 
 function App() {
+  const { t } = useTranslation()
+  
   return (
     <ThemeProvider>
       <AuthProvider>
@@ -20,22 +23,22 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={
-                <Suspense fallback={<FullPageLoader text="Loading Calendar..." />}>
+                <Suspense fallback={<FullPageLoader text={t('mobile.loading')} />}>
                   <CalendarPage />
                 </Suspense>
               } />
               <Route path="admin" element={
-                <Suspense fallback={<FullPageLoader text="Loading Admin..." />}>
+                <Suspense fallback={<FullPageLoader text={t('mobile.loading')} />}>
                   <AdminPage />
                 </Suspense>
               } />
               <Route path="login" element={
-                <Suspense fallback={<FullPageLoader text="Loading Login..." />}>
+                <Suspense fallback={<FullPageLoader text={t('mobile.loading')} />}>
                   <LoginPage />
                 </Suspense>
               } />
               <Route path="event/:eventSlug" element={
-                <Suspense fallback={<FullPageLoader text="Loading Event..." />}>
+                <Suspense fallback={<FullPageLoader text={t('mobile.loading')} />}>
                   <EventDetailsPage />
                 </Suspense>
               } />
