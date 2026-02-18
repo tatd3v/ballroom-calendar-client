@@ -6,6 +6,7 @@ import Layout from './components/Layout'
 import CalendarPage from './pages/CalendarPage'
 import AdminPage from './pages/AdminPage'
 import LoginPage from './pages/LoginPage'
+import EventDetailsPage from './pages/EventDetailsPage'
 
 function App() {
   return (
@@ -17,6 +18,7 @@ function App() {
               <Route index element={<CalendarPage />} />
               <Route path="admin" element={<AdminPage />} />
               <Route path="login" element={<LoginPage />} />
+              <Route path="event/:eventSlug" element={<EventDetailsPage />} />
             </Route>
           </Routes>
         </EventProvider>
