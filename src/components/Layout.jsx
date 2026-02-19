@@ -2,10 +2,10 @@ import { Outlet, Link, useLocation } from 'react-router-dom'
 import { useAuth } from '../context/AuthContext'
 import { useTheme } from '../context/ThemeContext'
 import { useTranslation } from 'react-i18next'
-import { CalendarDays, Settings, LogIn, LogOut, Menu, X, Sparkles, Moon, Sun, Globe, ChevronDown, Check } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { CalendarDays, Settings, LogIn, LogOut, Menu, X, Sparkles, Moon, Sun } from 'lucide-react'
+import { useState, useEffect } from 'react'
 import useMobile from '../hooks/useMobile'
-import { changeAppLanguage } from '../utils/locale'
+import LanguageDropdown from './ui/LanguageDropdown'
 
 export default function Layout() {
   const { user, logout } = useAuth()
@@ -14,36 +14,15 @@ export default function Layout() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false)
-  const languageDropdownRef = useRef(null)
   const isMobile = useMobile()
 
   const hideChrome = isMobile
 
   const isActive = (path) => location.pathname === path
 
-  const changeLanguage = (lng) => {
-    changeAppLanguage(i18n, lng)
-  }
-
   useEffect(() => {
     setMenuOpen(false)
   }, [location.pathname])
-
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (languageDropdownRef.current && !languageDropdownRef.current.contains(event.target)) {
-        setLanguageDropdownOpen(false)
-      }
-    }
-
-    if (languageDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-
-    return () => {
-      document.removeEventListener('mousedown', handleClickOutside)
-    }
-  }, [languageDropdownOpen])
 
   return (
     <div className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-ink text-white' : ''}`}>
@@ -101,50 +80,12 @@ export default function Layout() {
               <div className="ml-2 h-6 w-px bg-lavender-100 dark:bg-ink-600" />
 
               {/* Language selector */}
-              <div className="ml-1 relative" ref={languageDropdownRef}>
-                <button
-                  onClick={() => setLanguageDropdownOpen(!languageDropdownOpen)}
-                  className="bg-lavender/40 dark:bg-primary/20 rounded-lg py-1.5 pl-3 pr-2 text-sm font-bold text-primary flex items-center gap-1 border border-primary/20"
-                >
-                  <span>{i18n.language.toUpperCase()}</span>
-                  <ChevronDown className="w-4 h-4" />
-                </button>
-                
-                {languageDropdownOpen && (
-                  <div className="absolute right-0 mt-3 w-64 bg-white dark:bg-ink rounded-xl shadow-2xl border border-lavender/50 dark:border-primary/20 overflow-hidden z-[60]">
-                    <div className="py-2">
-                      <div className="flex items-center justify-between px-4 py-3 bg-lavender/30 dark:bg-primary/20 cursor-default">
-                        <span className="font-semibold text-ink dark:text-white">
-                          {i18n.language === 'en' ? 'English (EN)' : 'Spanish (ES)'}
-                        </span>
-                        <Check className="w-5 h-5 text-primary" />
-                      </div>
-                      {i18n.language !== 'en' && (
-                        <button
-                          onClick={() => {
-                            changeLanguage('en')
-                            setLanguageDropdownOpen(false)
-                          }}
-                          className="w-full flex items-center px-4 py-3 hover:bg-lavender/50 dark:hover:bg-ink-700 transition-colors"
-                        >
-                          <span className="font-medium text-ink-600 dark:text-gray-300">English (EN)</span>
-                        </button>
-                      )}
-                      {i18n.language !== 'es' && (
-                        <button
-                          onClick={() => {
-                            changeLanguage('es')
-                            setLanguageDropdownOpen(false)
-                          }}
-                          className="w-full flex items-center px-4 py-3 hover:bg-lavender/50 dark:hover:bg-ink-700 transition-colors"
-                        >
-                          <span className="font-medium text-ink-600 dark:text-gray-300">Spanish (ES)</span>
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </div>
+              <LanguageDropdown
+                isOpen={languageDropdownOpen}
+                onToggle={() => setLanguageDropdownOpen(!languageDropdownOpen)}
+                onClose={() => setLanguageDropdownOpen(false)}
+                className="ml-1"
+              />
 
               {/* Theme toggle */}
               <button
@@ -185,50 +126,13 @@ export default function Layout() {
 
               {/* Mobile: Language + Theme */}
               <div className="flex items-center gap-2 px-4 pt-2">
-                <div className="relative flex-1">
-                  <button
-                    onClick={() => setLanguageDropdownOpen(!languageDropdownOpen)}
-                    className="w-full bg-lavender/40 dark:bg-primary/20 rounded-lg py-2 pl-3 pr-2 text-sm font-bold text-primary flex items-center justify-between border border-primary/20"
-                  >
-                    <span>{i18n.language.toUpperCase()}</span>
-                    <ChevronDown className="w-4 h-4" />
-                  </button>
-                  
-                  {languageDropdownOpen && (
-                    <div className="absolute left-0 mt-2 w-full bg-white dark:bg-ink rounded-xl shadow-2xl border border-lavender/50 dark:border-primary/20 overflow-hidden z-[60]">
-                      <div className="py-2">
-                        <div className="flex items-center justify-between px-4 py-3 bg-lavender/30 dark:bg-primary/20 cursor-default">
-                          <span className="font-semibold text-ink dark:text-white">
-                            {i18n.language === 'en' ? 'English (EN)' : 'Spanish (ES)'}
-                          </span>
-                          <Check className="w-5 h-5 text-primary" />
-                        </div>
-                        {i18n.language !== 'en' && (
-                          <button
-                            onClick={() => {
-                              changeLanguage('en')
-                              setLanguageDropdownOpen(false)
-                            }}
-                            className="w-full flex items-center px-4 py-3 hover:bg-lavender/50 dark:hover:bg-ink-700 transition-colors"
-                          >
-                            <span className="font-medium text-ink-600 dark:text-gray-300">English (EN)</span>
-                          </button>
-                        )}
-                        {i18n.language !== 'es' && (
-                          <button
-                            onClick={() => {
-                              changeLanguage('es')
-                              setLanguageDropdownOpen(false)
-                            }}
-                            className="w-full flex items-center px-4 py-3 hover:bg-lavender/50 dark:hover:bg-ink-700 transition-colors"
-                          >
-                            <span className="font-medium text-ink-600 dark:text-gray-300">Spanish (ES)</span>
-                          </button>
-                        )}
-                      </div>
-                    </div>
-                  )}
-                </div>
+                <LanguageDropdown
+                  isOpen={languageDropdownOpen}
+                  onToggle={() => setLanguageDropdownOpen(!languageDropdownOpen)}
+                  onClose={() => setLanguageDropdownOpen(false)}
+                  className="relative flex-1"
+                  isMobile={true}
+                />
               </div>
             </nav>
           </div>
