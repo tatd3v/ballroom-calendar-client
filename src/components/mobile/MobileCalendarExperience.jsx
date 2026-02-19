@@ -8,16 +8,14 @@ import {
   UserRound,
   MapPin,
   Clock,
-  Menu,
-  Sun,
-  Moon,
   Plus,
-  Globe,
 } from 'lucide-react'
 import { useEvents } from '../../context/EventContext'
 import { useTheme } from '../../context/ThemeContext'
 import { useAuth } from '../../context/AuthContext'
 import MobileExperienceMenu from './MobileExperienceMenu'
+import MobileHeader from './MobileHeader'
+import MobileCalendarSkeleton from '../ui/skeletons/MobileCalendarSkeleton'
 import { formatTimeWithMeridiem, parseDateOnlyToLocal } from '../../utils/time'
 import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
 import { getEventUrl } from '../../utils/slugify'
@@ -202,26 +200,14 @@ export default function MobileCalendarExperience() {
 
   return (
     <div className="font-display dark:bg-background-dark text-ink dark:text-white min-h-screen pb-28">
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
-        <div className="flex items-center justify-between px-4 h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <CalendarDays className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg tracking-tight text-ink dark:text-white">{t('calendar.title')}</h1>
-              <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">{t('nav.subtitle')}</p>
-            </div>
-          </div>
-          <button
-            className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-            aria-label={t('mobile.openMenu')}
-            onClick={() => setMenuOpen(true)}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
-      </header>
+      {/* Header - Using reusable MobileHeader component */}
+      <MobileHeader
+        title={t('calendar.title')}
+        subtitle={t('nav.subtitle')}
+        icon={CalendarDays}
+        menuOpen={menuOpen}
+        onMenuToggle={() => setMenuOpen(true)}
+      />
 
       <MobileExperienceMenu
         open={menuOpen}
@@ -234,63 +220,61 @@ export default function MobileCalendarExperience() {
       />
 
       <main>
-        <section className="px-4 py-6 bg-white dark:bg-background-dark border-b border-primary/5 space-y-6">
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
-            <button
-              onClick={() => setSelectedCity('all')}
-              className={`flex-none px-5 py-2 rounded-full font-semibold text-sm transition-colors ${
-                selectedCity === 'all' ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
-              }`}
-            >
-              {t('filter.allCities')}
-            </button>
-            {cities.map((city) => (
-              <button
-                key={city}
-                onClick={() => setSelectedCity(city)}
-                className={`flex-none px-5 py-2 rounded-full font-semibold text-sm transition-colors border ${
-                  selectedCity === city ? 'text-white border-transparent' : 'text-ink dark:text-white/80 border-primary/10'
-                }`}
-                style={{
-                  backgroundColor: selectedCity === city ? cityColors[city] : 'rgba(255,255,255,0.1)',
-                  boxShadow: selectedCity === city ? `0 10px 30px ${cityColors[city]}33` : undefined,
-                }}
-              >
-                {city}
-              </button>
-            ))}
-          </div>
-        </section>
-
-        <section className="px-4 space-y-6 mt-6">
-          {loading && (
-            <div className="space-y-3">
-              {Array.from({ length: 3 }).map((_, idx) => (
-                <div key={idx} className="animate-pulse bg-white/70 dark:bg-white/5 h-24 rounded-2xl" />
-              ))}
-            </div>
-          )}
-
-          {!loading && groupedEvents.length === 0 && (
-            <div className="pt-10 flex flex-col items-center text-center opacity-60">
-              <CalendarDays className="w-12 h-12 text-primary/50" />
-              <p className="mt-2 text-sm font-medium">
-                {t('calendar.noEvents', { defaultValue: 'No events scheduled for this week' })}
-              </p>
-            </div>
-          )}
-
-          {groupedEvents.map((group) => (
-            <div key={group.date}>
-              <h3 className="text-base font-black uppercase tracking-widest text-ink/70 dark:text-white/70 mb-3 px-1">
-                {formatDayHeading(group.date)}
-              </h3>
-              <div className="space-y-3">
-                {group.items.map(renderEventCard)}
+        {loading ? (
+          <MobileCalendarSkeleton />
+        ) : (
+          <>
+            <section className="px-4 py-6 bg-white dark:bg-background-dark border-b border-primary/5 space-y-6">
+              <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+                <button
+                  onClick={() => setSelectedCity('all')}
+                  className={`flex-none px-5 py-2 rounded-full font-semibold text-sm transition-colors ${
+                    selectedCity === 'all' ? 'bg-primary text-white' : 'bg-primary/10 text-primary'
+                  }`}
+                >
+                  {t('filter.allCities')}
+                </button>
+                {cities.map((city) => (
+                  <button
+                    key={city}
+                    onClick={() => setSelectedCity(city)}
+                    className={`flex-none px-5 py-2 rounded-full font-semibold text-sm transition-colors border ${
+                      selectedCity === city ? 'text-white border-transparent' : 'text-ink dark:text-white/80 border-primary/10'
+                    }`}
+                    style={{
+                      backgroundColor: selectedCity === city ? cityColors[city] : 'rgba(255,255,255,0.1)',
+                      boxShadow: selectedCity === city ? `0 10px 30px ${cityColors[city]}33` : undefined,
+                    }}
+                  >
+                    {city}
+                  </button>
+                ))}
               </div>
-            </div>
-          ))}
-        </section>
+            </section>
+
+            <section className="px-4 space-y-6 mt-6">
+              {groupedEvents.length === 0 && (
+                <div className="pt-10 flex flex-col items-center text-center opacity-60">
+                  <CalendarDays className="w-12 h-12 text-primary/50" />
+                  <p className="mt-2 text-sm font-medium">
+                    {t('calendar.noEvents', { defaultValue: 'No events scheduled for this week' })}
+                  </p>
+                </div>
+              )}
+
+              {groupedEvents.map((group) => (
+                <div key={group.date}>
+                  <h3 className="text-base font-black uppercase tracking-widest text-ink/70 dark:text-white/70 mb-3 px-1">
+                    {formatDayHeading(group.date)}
+                  </h3>
+                  <div className="space-y-3">
+                    {group.items.map(renderEventCard)}
+                  </div>
+                </div>
+              ))}
+            </section>
+          </>
+        )}
       </main>
 
       {user && (

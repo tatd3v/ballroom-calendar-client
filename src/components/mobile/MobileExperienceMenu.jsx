@@ -22,7 +22,6 @@ import { useAuth } from '../../context/AuthContext'
 import { useEvents } from '../../context/EventContext'
 import { useTheme } from '../../context/ThemeContext'
 import MobilePreferences from './MobilePreferences'
-import BottomNavItem from './BottomNavItem'
 import { formatTimeWithMeridiem, formatDateWithLocale } from '../../utils/time'
 import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
 
