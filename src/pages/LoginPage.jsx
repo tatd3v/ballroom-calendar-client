@@ -1,9 +1,10 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
+import { useTheme } from '../context/ThemeContext'
 import { InlineLoader } from '../components/ui/CustomLoader'
-import useMobile from '../hooks/useMobileMenu'
+import useMobile from '../hooks/useMobile'
 import MobileHeader from '../components/mobile/MobileHeader'
 import MobileExperienceMenu from '../components/mobile/MobileExperienceMenu'
 import MobilePreferences from '../components/mobile/MobilePreferences'
@@ -29,8 +30,8 @@ export default function LoginPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
-  const { menuOpen, toggleMenu, closeMenu } = useMobileMenu()
-
+  const { menuOpen, toggleMenu, closeMenu } = useMobile()
+  
   const handleSubmit = async (e) => {
     e.preventDefault()
     setError('')
@@ -156,10 +157,7 @@ export default function LoginPage() {
             className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 transition-all active:scale-[0.98] disabled:opacity-60 flex items-center justify-center gap-2"
           >
             {loading ? (
-              <>
-                <InlineLoader size="medium" />
-                {t('login.signingIn')}
-              </>
+              <span>{t('login.signingIn')}</span>
             ) : (
               <>
                 {t('login.signIn')}
