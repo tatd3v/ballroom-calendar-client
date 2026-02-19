@@ -1,21 +1,20 @@
-import { useState, useEffect, useCallback, useRef } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { Navigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useEvents } from '../context/EventContext'
-import useMobile from '../hooks/useMobile'
 import { InlineLoader } from '../components/ui/CustomLoader'
 import MobileAdminExperience from '../components/mobile/MobileAdminExperience'
+import AdminPageSkeleton from '../components/ui/skeletons/AdminPageSkeleton'
+import Toast from '../components/ui/Toast'
+import EventFormModal from '../components/EventFormModal'
 import { formatDateWithLocale, formatTimeWithMeridiem, parseDateOnlyToLocal } from '../utils/time'
+import { eventToFormData, formDataToEvent } from '../utils/eventHelpers'
+import { useMobile, useToast, useEventForm, useImageUpload, usePagination, useClickOutside } from '../hooks'
 import { 
-  AlertTriangle, 
-  CheckCircle, 
   Plus,
-  Save, 
   Edit, 
   Trash,
-  X, 
-  Upload,
   Filter,
   ChevronDown,
   Check,
@@ -25,85 +24,133 @@ import {
 } from 'lucide-react'
 
 export default function AdminPage() {
-  // Context hooks first
+  // Context hooks
   const { user } = useAuth()
-  const { events, cities, cityColors, selectedCity, setSelectedCity, addEvent, updateEvent, deleteEvent } = useEvents()
+  const { events, cities, cityColors, selectedCity, setSelectedCity, addEvent, updateEvent, deleteEvent, loading } = useEvents()
   const { t, i18n } = useTranslation()
   const isMobile = useMobile()
   const location = useLocation()
   
+  // Custom hooks for reusable functionality
+  const { toast, showSuccess, showError } = useToast()
+  const {
+    formData,
+    setFormData,
+    imagePreview,
+    setImagePreview,
+    resetForm
+  } = useEventForm()
+  const {
+    uploading: uploadingImage,
+    uploadImage,
+    removeImage: removeImageUpload,
+    setPreview: setImageUploadPreview
+  } = useImageUpload()
+  
   // State hooks
   const [editingEvent, setEditingEvent] = useState(null)
   const [showForm, setShowForm] = useState(false)
-  const [toast, setToast] = useState(null)
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false)
   const [timeDropdownOpen, setTimeDropdownOpen] = useState(false)
-  const [currentPage, setCurrentPage] = useState(1)
-  const [uploadingImage, setUploadingImage] = useState(false)
-  const [imagePreview, setImagePreview] = useState(null)
   const [timeFilter, setTimeFilter] = useState('upcoming30')
-  const [formData, setFormData] = useState({
-    title: '',
-    city: '',
-    start: '',
-    description: '',
-    time: '',
-    location: '',
-    imageUrl: ''
-  })
   
-  // Refs and constants
-  const ITEMS_PER_PAGE = 10
-  const cityDropdownRef = useRef(null)
-  const timeDropdownRef = useRef(null)
+  // Click outside handlers
+  const cityDropdownRef = useClickOutside(() => setCityDropdownOpen(false), cityDropdownOpen)
+  const timeDropdownRef = useClickOutside(() => setTimeDropdownOpen(false), timeDropdownOpen)
 
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (cityDropdownRef.current && !cityDropdownRef.current.contains(event.target)) {
-        setCityDropdownOpen(false)
-      }
-      if (timeDropdownRef.current && !timeDropdownRef.current.contains(event.target)) {
-        setTimeDropdownOpen(false)
-      }
-    }
-    if (cityDropdownOpen || timeDropdownOpen) {
-      document.addEventListener('mousedown', handleClickOutside)
-    }
-    return () => document.removeEventListener('mousedown', handleClickOutside)
-  }, [cityDropdownOpen, timeDropdownOpen])
+  // Pagination — must be called before any early returns (Rules of Hooks)
+  const userEvents = !user || isMobile
+    ? []
+    : user.role === 'admin'
+      ? selectedCity === 'all' ? (events || []) : (events || []).filter(e => e.city === selectedCity)
+      : (events || []).filter(e => e.city === user.city)
 
-  useEffect(() => {
-    setCurrentPage(1)
-  }, [selectedCity, events?.length])
+  const {
+    currentPage,
+    totalPages,
+    paginatedItems: paginatedEvents,
+    nextPage,
+    previousPage,
+    hasNextPage,
+    hasPreviousPage
+  } = usePagination(userEvents, 10)
 
+  // ALL useCallback hooks must be declared before any early returns (Rules of Hooks)
   const handleEdit = useCallback((event) => {
-    setFormData({
-      title: event.title,
-      city: event.city,
-      start: event.start,
-      end: event.end || '',
-      description: event.description || '',
-      imageUrl: event.imageUrl || ''
-    })
+    const formDataFromEvent = eventToFormData(event)
+    setFormData(formDataFromEvent)
     setImagePreview(event.imageUrl || null)
+    setImageUploadPreview(event.imageUrl || null)
     setEditingEvent(event)
     setShowForm(true)
-  }, [])
+  }, [setFormData, setImagePreview, setImageUploadPreview])
+
+  const handleCancel = useCallback(() => {
+    resetForm()
+    removeImageUpload()
+    setEditingEvent(null)
+    setShowForm(false)
+  }, [resetForm, removeImageUpload])
+
+  const handleImageUpload = useCallback(async (e) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+    const result = await uploadImage(file)
+    if (result.success) {
+      setFormData({ ...formData, imageUrl: result.url })
+      setImagePreview(result.url)
+      showSuccess(t('admin.imageUploaded', 'Image uploaded successfully!'))
+    } else {
+      showError(result.error)
+    }
+  }, [uploadImage, formData, setFormData, setImagePreview, showSuccess, showError, t])
+
+  const handleRemoveImage = useCallback(() => {
+    setFormData({ ...formData, imageUrl: '' })
+    removeImageUpload()
+  }, [formData, setFormData, removeImageUpload])
+
+  const handleSubmit = useCallback(async (e) => {
+    e.preventDefault()
+    try {
+      const eventData = formDataToEvent(formData)
+      if (editingEvent) {
+        await updateEvent(editingEvent.id, eventData)
+        showSuccess(t('admin.eventUpdated', 'Event updated successfully'))
+      } else {
+        await addEvent(eventData)
+        showSuccess(t('admin.eventCreated', 'Event created successfully'))
+      }
+      handleCancel()
+    } catch (err) {
+      showError(err.message || t('admin.somethingWrong', 'Something went wrong'))
+    }
+  }, [formData, editingEvent, updateEvent, addEvent, showSuccess, showError, handleCancel, t])
+
+  const handleDelete = useCallback(async (id) => {
+    if (confirm(t('admin.confirmDelete', 'Are you sure you want to delete this event?'))) {
+      try {
+        await deleteEvent(id)
+        showSuccess(t('admin.eventDeleted', 'Event deleted successfully'))
+      } catch (err) {
+        showError(err.message || t('admin.failedDelete', 'Failed to delete event'))
+      }
+    }
+  }, [deleteEvent, showSuccess, showError, t])
 
   // Handle edit state from navigation
   useEffect(() => {
     if (location.state?.editingEvent) {
       handleEdit(location.state.editingEvent)
-      // Clear the state to prevent re-triggering
       window.history.replaceState({}, document.title)
     }
   }, [location.state, handleEdit])
 
+  // --- Early returns after ALL hooks ---
   if (!user) {
     return <Navigate to="/login" replace />
   }
-  
-  // Move mobile check to the end after all hooks have been called
+
   if (isMobile) {
     return <MobileAdminExperience initialEditEvent={location.state?.editingEvent} />
   }
@@ -130,137 +177,20 @@ export default function AdminPage() {
     return timeFilterOptions.find(o => o.value === timeFilter)?.label || timeFilterOptions[0].label
   }
 
-  const userEvents = user.role === 'admin' 
-    ? selectedCity === 'all' 
-      ? (events || [])
-      : (events || []).filter(e => e.city === selectedCity)
-    : (events || []).filter(e => e.city === user.city)
-
-  // Debug logging
-  console.log('Admin Debug:', {
-    userRole: user?.role,
-    selectedCity,
-    eventsLength: events?.length,
-    userEventsLength: userEvents.length,
-    firstEvent: events?.[0]
-  })
-
-  const totalPages = Math.max(1, Math.ceil(userEvents.length / ITEMS_PER_PAGE))
-  const safePage = Math.min(currentPage, totalPages)
-  const startIndex = (safePage - 1) * ITEMS_PER_PAGE
-  const paginatedEvents = userEvents.slice(startIndex, startIndex + ITEMS_PER_PAGE)
-
-  const showToast = (message, type = 'success') => {
-    setToast({ message, type })
-    setTimeout(() => setToast(null), 3000)
-  }
-
-  const handleImageUpload = async (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-
-    // Validate file type
-    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/webp']
-    if (!allowedTypes.includes(file.type)) {
-      showToast('Invalid file type. Only JPEG, PNG, and WebP are allowed.', 'error')
-      return
-    }
-
-    // Validate file size (5MB)
-    if (file.size > 5 * 1024 * 1024) {
-      showToast('File size must be less than 5MB.', 'error')
-      return
-    }
-
-    setUploadingImage(true)
-
-    try {
-      const formData = new FormData()
-      formData.append('image', file)
-
-      const token = localStorage.getItem('token')
-      const response = await fetch('/api/events/upload-image', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${token}`
-        },
-        body: formData
-      })
-
-      if (!response.ok) {
-        throw new Error('Failed to upload image')
-      }
-
-      const result = await response.json()
-      setFormData({ ...formData, imageUrl: result.imageUrl })
-      setImagePreview(result.imageUrl)
-      showToast('Image uploaded successfully!')
-    } catch (error) {
-      showToast('Failed to upload image: ' + error.message, 'error')
-    } finally {
-      setUploadingImage(false)
-    }
-  }
-
-  const handleRemoveImage = () => {
-    setFormData({ ...formData, imageUrl: '' })
-    setImagePreview(null)
-  }
-
-  const handleSubmit = async (e) => {
-    e.preventDefault()
-    try {
-      if (editingEvent) {
-        await updateEvent(editingEvent.id, formData)
-        showToast(t('admin.eventUpdated'))
-      } else {
-        await addEvent(formData)
-        showToast(t('admin.eventCreated'))
-      }
-      setFormData(emptyForm)
-      setEditingEvent(null)
-      setShowForm(false)
-    } catch (err) {
-      showToast(err.message || t('admin.somethingWrong'), 'error')
-    }
-  }
-
-  const handleDelete = async (id) => {
-    if (confirm(t('admin.confirmDelete'))) {
-      try {
-        await deleteEvent(id)
-        showToast(t('admin.eventDeleted'))
-      } catch (err) {
-        showToast(err.message || t('admin.failedDelete'), 'error')
-      }
-    }
-  }
-
-  const handleCancel = () => {
-    setFormData(emptyForm)
-    setImagePreview(null)
-    setEditingEvent(null)
-    setShowForm(false)
-  }
-
   const inputClasses = "w-full px-3.5 py-2.5 border border-lavender-100 dark:border-lavender/20 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white dark:bg-ink-700 text-ink dark:text-ink-100 placeholder:text-ink-300 dark:placeholder-ink-400 transition-all duration-200"
+
+  if (loading) {
+    return <AdminPageSkeleton />
+  }
 
   return (
     <div className="space-y-5">
       {/* Toast notification */}
-      {toast && (
-        <div className={`fixed top-24 right-4 z-50 animate-slide-down flex items-center gap-2.5 px-4 py-3 rounded-xl shadow-2xl text-sm font-semibold ${
-          toast.type === 'error' 
-            ? 'bg-orange-50 dark:bg-orange/10 text-orange border border-orange-100 dark:border-orange/30' 
-            : 'bg-lime-50 dark:bg-lime/10 text-lime-500 border border-lime-100 dark:border-lime/30'
-        }`}>
-          {toast.type === 'error' 
-            ? <AlertTriangle className="w-4 h-4" /> 
-            : <CheckCircle className="w-4 h-4" />
-          }
-          {toast.message}
-        </div>
-      )}
+      <Toast 
+        message={toast?.message} 
+        type={toast?.type} 
+        onClose={() => {}} 
+      />
 
       {/* Page header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-8">
@@ -354,151 +284,21 @@ export default function AdminPage() {
         </div>
       </div>
 
-      {/* Form */}
-      {showForm && (
-        <div className="bg-white dark:bg-ink-800 rounded-2xl p-5 animate-fade-in-up border border-lavender/10 dark:border-lavender/20 shadow-xl shadow-lavender/5 dark:shadow-black/40">
-          <div className="flex items-center gap-2 mb-5">
-            <div className="w-2 h-6 rounded-full bg-gradient-to-b from-primary to-orange" />
-            <h2 className="font-bold text-ink dark:text-ink-100">
-              {editingEvent ? t('admin.editEvent') : t('admin.newEvent')}
-            </h2>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div>
-                <label className="block text-xs font-bold text-ink-400 dark:text-ink-300 mb-1.5 uppercase tracking-wide">{t('admin.title')}</label>
-                <input
-                  type="text"
-                  value={formData.title}
-                  onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                  className={inputClasses}
-                  placeholder={t('admin.eventTitle')}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-ink-400 dark:text-ink-300 mb-1.5 uppercase tracking-wide">{t('admin.city')}</label>
-                <select
-                  value={formData.city}
-                  onChange={(e) => setFormData({ ...formData, city: e.target.value })}
-                  className={inputClasses}
-                  required
-                >
-                  {availableCities.map(city => (
-                    <option key={city} value={city}>{city}</option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-ink-400 dark:text-ink-300 mb-1.5 uppercase tracking-wide">{t('admin.startDate')}</label>
-                <input
-                  type="date"
-                  value={formData.start}
-                  onChange={(e) => setFormData({ ...formData, start: e.target.value })}
-                  className={inputClasses}
-                  required
-                />
-              </div>
-
-              <div>
-                <label className="block text-xs font-bold text-ink-400 dark:text-ink-300 mb-1.5 uppercase tracking-wide">{t('admin.endDate')}</label>
-                <input
-                  type="date"
-                  value={formData.end}
-                  onChange={(e) => setFormData({ ...formData, end: e.target.value })}
-                  className={inputClasses}
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-xs font-bold text-ink-400 dark:text-ink-300 mb-1.5 uppercase tracking-wide">{t('admin.description')}</label>
-              <textarea
-                value={formData.description}
-                onChange={(e) => setFormData({ ...formData, description: e.target.value })}
-                className={inputClasses + " resize-none"}
-                rows={3}
-                placeholder={t('admin.eventDescription')}
-              />
-            </div>
-
-            {/* Image Upload Section */}
-            <div>
-              <label className="block text-xs font-bold text-ink-400 dark:text-ink-300 mb-1.5 uppercase tracking-wide">{t('admin.eventImage')}</label>
-              
-              {imagePreview ? (
-                <div className="relative">
-                  <img 
-                    src={imagePreview} 
-                    alt="Event preview" 
-                    className="w-full h-48 object-cover rounded-xl border border-lavender-100 dark:border-lavender/20"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleRemoveImage}
-                    className="absolute top-2 right-2 bg-red-500 text-white p-2 rounded-full hover:bg-red-600 transition-colors"
-                  >
-                    <X className="w-4 h-4" />
-                  </button>
-                </div>
-              ) : (
-                <div className="border-2 border-dashed border-lavender-200 dark:border-lavender/30 rounded-xl p-6 text-center hover:border-primary/50 transition-colors">
-                  <input
-                    type="file"
-                    id="image-upload"
-                    accept="image/jpeg,image/jpg,image/png,image/webp"
-                    onChange={handleImageUpload}
-                    className="hidden"
-                    disabled={uploadingImage}
-                  />
-                  <label 
-                    htmlFor="image-upload" 
-                    className={`cursor-pointer flex flex-col items-center gap-3 ${uploadingImage ? 'opacity-50 cursor-not-allowed' : ''}`}
-                  >
-                    {uploadingImage ? (
-                      <InlineLoader size="large" />
-                    ) : (
-                      <Upload className="w-8 h-8 text-ink-400 dark:text-ink-500" />
-                    )}
-                    <div className="text-sm">
-                      <span className="text-primary font-semibold hover:text-primary-600 transition-colors">
-                        {uploadingImage ? 'Uploading...' : 'Click to upload'}
-                      </span>
-                      <span className="text-ink-400 dark:text-ink-500 ml-1">
-                        or drag and drop
-                      </span>
-                    </div>
-                    <p className="text-xs text-ink-400 dark:text-ink-500">
-                      PNG, JPG, WebP up to 5MB
-                    </p>
-                  </label>
-                </div>
-              )}
-            </div>
-
-            <div className="flex gap-2 justify-end pt-2">
-              <button
-                type="button"
-                onClick={handleCancel}
-                className="flex items-center gap-2 px-4 py-2.5 border border-lavender-100 dark:border-lavender/20 rounded-xl text-sm font-semibold text-ink-400 dark:text-ink-300 hover:bg-lavender-50 dark:hover:bg-ink-600 transition-all duration-200"
-              >
-                <X className="w-4 h-4" />
-                {t('admin.cancel')}
-              </button>
-              <button
-                type="submit"
-                className="flex items-center gap-2 bg-gradient-to-r from-primary to-primary-500 text-white px-5 py-2.5 rounded-xl text-sm font-bold shadow-sm shadow-primary/20 hover:shadow-glow-primary transition-all duration-200"
-              >
-                <Save className="w-4 h-4" />
-                {editingEvent ? t('admin.update') : t('admin.create')}
-              </button>
-            </div>
-          </form>
-        </div>
-      )}
+      {/* Event Form Modal - Using reusable component */}
+      <EventFormModal
+        show={showForm}
+        editingEvent={editingEvent}
+        formData={formData}
+        onFormDataChange={setFormData}
+        imagePreview={imagePreview}
+        uploadingImage={uploadingImage}
+        cities={availableCities}
+        onClose={handleCancel}
+        onSubmit={handleSubmit}
+        onImageUpload={handleImageUpload}
+        onImageRemove={handleRemoveImage}
+        inputClasses={inputClasses}
+      />
 
       {/* Events table */}
       <div className="bg-white dark:bg-ink-800 border border-lavender/10 dark:border-lavender/20 rounded-xl overflow-hidden shadow-xl shadow-lavender/5 dark:shadow-black/40">
@@ -608,33 +408,23 @@ export default function AdminPage() {
         {/* Pagination */}
         <div className="px-6 py-4 flex items-center justify-between border-t border-lavender/10 dark:border-lavender/20 bg-lavender/5 dark:bg-ink-700/30">
           <div className="text-sm text-ink-400 dark:text-ink-300">
-            {t('admin.showing')} <span className="font-bold text-ink dark:text-ink-100">{userEvents.length === 0 ? 0 : startIndex + 1}</span>{t('admin.to')}<span className="font-bold text-ink dark:text-ink-100">{Math.min(startIndex + ITEMS_PER_PAGE, userEvents.length)}</span> {t('admin.of')} <span className="font-bold text-ink dark:text-ink-100">{userEvents.length}</span> {t('admin.entries')}
+            {t('admin.showing')} <span className="font-bold text-ink dark:text-ink-100">{paginatedEvents.length === 0 ? 0 : (currentPage - 1) * 10 + 1}</span> {t('admin.to')} <span className="font-bold text-ink dark:text-ink-100">{Math.min(currentPage * 10, userEvents.length)}</span> {t('admin.of')} <span className="font-bold text-ink dark:text-ink-100">{userEvents.length}</span> {t('admin.entries')}
           </div>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
               <button
-                onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                disabled={safePage === 1}
+                onClick={previousPage}
+                disabled={!hasPreviousPage}
                 className="w-9 h-9 flex items-center justify-center rounded-lg border border-lavender/10 dark:border-lavender/20 hover:bg-lavender/10 dark:hover:bg-ink-600 text-ink-400 dark:text-ink-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronLeft className="w-4 h-4" />
               </button>
-              {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                <button
-                  key={page}
-                  onClick={() => setCurrentPage(page)}
-                  className={`w-9 h-9 flex items-center justify-center rounded-lg font-semibold transition-colors ${
-                    page === safePage
-                      ? 'bg-primary text-white font-bold shadow-lg shadow-primary/20'
-                      : 'border border-lavender/10 dark:border-lavender/20 hover:bg-lavender/10 dark:hover:bg-ink-600 text-ink-400 dark:text-ink-300'
-                  }`}
-                >
-                  {page}
-                </button>
-              ))}
+              <span className="text-sm text-ink-400 dark:text-ink-300 px-3">
+                {currentPage} / {totalPages}
+              </span>
               <button
-                onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                disabled={safePage === totalPages}
+                onClick={nextPage}
+                disabled={!hasNextPage}
                 className="w-9 h-9 flex items-center justify-center rounded-lg border border-lavender/10 dark:border-lavender/20 hover:bg-lavender/10 dark:hover:bg-ink-600 text-ink-400 dark:text-ink-300 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
               >
                 <ChevronRight className="w-4 h-4" />
