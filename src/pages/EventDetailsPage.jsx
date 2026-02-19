@@ -1,75 +1,79 @@
-import React, { useState, useEffect } from 'react'
-import { useParams, useNavigate, Link } from 'react-router-dom'
-import { useTranslation } from 'react-i18next'
-import { useTheme } from '../context/ThemeContext'
-import { useEvents } from '../context/EventContext'
-import { useAuth } from '../context/AuthContext'
-import { 
-  ArrowLeft, 
-  Heart, 
-  Share2, 
-  CalendarDays, 
-  MapPin, 
+import React, { useState, useEffect } from 'react';
+import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
+import { useTheme } from '../context/ThemeContext';
+import { useEvents } from '../context/EventContext';
+import { useAuth } from '../context/AuthContext';
+import {
+  ArrowLeft,
+  Heart,
+  Share2,
+  CalendarDays,
+  MapPin,
   Clock,
   Star,
-  ExternalLink
-} from 'lucide-react'
-import { formatDateWithLocale, formatTimeWithMeridiem, parseDateOnlyToLocal } from '../utils/time'
-import { slugify, getEventUrl, findEventBySlug } from '../utils/slugify'
-import CustomLoader from '../components/ui/CustomLoader'
+  ExternalLink,
+} from 'lucide-react';
+import {
+  formatDateWithLocale,
+  formatTimeWithMeridiem,
+  parseDateOnlyToLocal,
+} from '../utils/time';
+import { slugify, getEventUrl, findEventBySlug } from '../utils/slugify';
+import CustomLoader from '../components/ui/CustomLoader';
 
 export default function EventDetailsPage() {
-  const params = useParams()
-  const navigate = useNavigate()
-  const { t, i18n } = useTranslation()
-  const { theme } = useTheme()
-  const { events, loading, cityColors } = useEvents()
-  const { user } = useAuth()
-  const [event, setEvent] = useState(null)
-  const [isLiked, setIsLiked] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const params = useParams();
+  const navigate = useNavigate();
+  const { t, i18n } = useTranslation();
+  const { theme } = useTheme();
+  const { events, loading, cityColors } = useEvents();
+  const { user } = useAuth();
+  const [event, setEvent] = useState(null);
+  const [isLiked, setIsLiked] = useState(false);
+  const [currentImageIndex, setCurrentImageIndex] = useState(0);
 
   // Extract event slug from URL parameters
-  const eventSlug = params.eventSlug
+  const eventSlug = params.eventSlug;
 
   // Local getCityBadge function
   const getCityBadge = (city) => {
-    const color = cityColors?.[city]
+    const color = cityColors?.[city];
     const style = color
       ? {
           backgroundColor: `${color}22`,
           color: color,
-          borderColor: `${color}55`
+          borderColor: `${color}55`,
         }
-      : undefined
-    
+      : undefined;
+
     return (
-      <span 
+      <span
         className="px-2 py-0.5 rounded text-xs font-semibold uppercase border"
         style={style}
       >
         {city}
       </span>
-    )
-  }
+    );
+  };
 
   // Find event by slug
   useEffect(() => {
     if (events.length > 0 && eventSlug) {
-      const foundEvent = findEventBySlug(eventSlug, events)
+      const foundEvent = findEventBySlug(eventSlug, events);
       if (foundEvent) {
-        setEvent(foundEvent)
+        setEvent(foundEvent);
       } else {
-        navigate('/calendar')
+        navigate('/calendar');
       }
     }
-  }, [events, eventSlug, navigate])
+  }, [events, eventSlug, navigate]);
 
   // Handle like toggle
   const handleLike = () => {
-    setIsLiked(!isLiked)
+    setIsLiked(!isLiked);
     // TODO: Implement like functionality
-  }
+  };
 
   // Handle share
   const handleShare = async () => {
@@ -78,79 +82,88 @@ export default function EventDetailsPage() {
         await navigator.share({
           title: event.title,
           text: event.description,
-          url: window.location.href
-        })
+          url: window.location.href,
+        });
       } catch (err) {
-        console.log('Share cancelled')
+        console.log('Share cancelled');
       }
     } else {
       // Fallback - copy to clipboard
-      navigator.clipboard.writeText(window.location.href)
+      navigator.clipboard.writeText(window.location.href);
     }
-  }
+  };
 
   // Handle image gallery navigation
   const nextImage = () => {
-    setCurrentImageIndex((prev) => (prev + 1) % (event?.images?.length || 1))
-  }
+    setCurrentImageIndex((prev) => (prev + 1) % (event?.images?.length || 1));
+  };
 
   const prevImage = () => {
-    setCurrentImageIndex((prev) => (prev - 1 + (event?.images?.length || 1)) % (event?.images?.length || 1))
-  }
+    setCurrentImageIndex(
+      (prev) =>
+        (prev - 1 + (event?.images?.length || 1)) %
+        (event?.images?.length || 1),
+    );
+  };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-white dark:bg-ink/50 flex items-center justify-center">
         <CustomLoader size="large" text={t('mobile.loading')} />
       </div>
-    )
+    );
   }
 
   if (!event) {
     return (
       <div className="min-h-screen bg-white dark:bg-ink/50 flex items-center justify-center">
         <div className="text-center">
-          <p className="text-ink/70 dark:text-white/70 mb-4">{t('mobile.eventNotFound', 'Event not found')}</p>
-          <Link 
-            to="/calendar" 
+          <p className="text-ink/70 dark:text-white/70 mb-4">
+            {t('mobile.eventNotFound', 'Event not found')}
+          </p>
+          <Link
+            to="/calendar"
             className="text-primary hover:text-primary/80 font-medium"
           >
             {t('mobile.backToCalendar', 'Back to Calendar')}
           </Link>
         </div>
       </div>
-    )
+    );
   }
 
-  const cityColor = cityColors[event.city] || '#EE0087'
-  const images = event.images || [event.imageUrl].filter(Boolean)
-  const heroImage = images[currentImageIndex] || null
-  const dateSource = event.start || event.date
-  const parsedDate = dateSource ? parseDateOnlyToLocal(dateSource) : null
+  const cityColor = cityColors[event.city] || '#EE0087';
+  const images = event.images || [event.imageUrl].filter(Boolean);
+  const heroImage = images[currentImageIndex] || null;
+  const dateSource = event.start || event.date;
+  const parsedDate = dateSource ? parseDateOnlyToLocal(dateSource) : null;
 
   const quickInfo = [
     {
       id: 'date',
       icon: CalendarDays,
       label: t('event.date', 'Date'),
-      value: parsedDate ? formatDateWithLocale(dateSource, i18n.language) : t('mobile.dateTBA', 'Date TBD'),
-      helper: event.time ? formatTimeWithMeridiem(event.time) : t('mobile.timeTBA', 'Time TBD')
+      value: parsedDate
+        ? formatDateWithLocale(dateSource, i18n.language)
+        : t('mobile.dateTBA', 'Date TBD'),
     },
     {
       id: 'time',
       icon: Clock,
       label: t('event.time', 'Time'),
-      value: event.time ? formatTimeWithMeridiem(event.time) : t('mobile.timeTBA', 'Time TBD'),
-      helper: t('mobile.localTimezone', 'Local time')
+      value: event.time
+        ? formatTimeWithMeridiem(event.time)
+        : t('mobile.timeTBA', 'Time TBD'),
+      helper: t('mobile.localTimezone', 'Local time'),
     },
     {
       id: 'venue',
       icon: MapPin,
       label: t('event.venue', 'Venue'),
       value: event.location || t('mobile.locationTBA', 'Location TBD'),
-      helper: event.city
-    }
-  ]
+      helper: event.city,
+    },
+  ];
 
   return (
     <div className="min-h-screen bg-background-light dark:bg-background-dark text-ink dark:text-white">
@@ -176,12 +189,6 @@ export default function EventDetailsPage() {
           </button>
           <div className="flex gap-2">
             <button
-              onClick={handleLike}
-              className="bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/40 transition-colors"
-            >
-              <Heart className={`w-5 h-5 ${isLiked ? 'fill-current' : ''}`} />
-            </button>
-            <button
               onClick={handleShare}
               className="bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/40 transition-colors"
             >
@@ -200,24 +207,9 @@ export default function EventDetailsPage() {
                 {event.title}
               </h1>
               <p className="text-white/80 max-w-2xl text-sm sm:text-base">
-                {event.description?.slice(0, 160) || t('mobile.aboutEvent', 'Event details')}
+                {event.description?.slice(0, 160) ||
+                  t('mobile.aboutEvent', 'Event details')}
               </p>
-            </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={nextImage}
-                className="bg-white/15 text-white p-3 rounded-full border border-white/30 hover:bg-white/25 transition"
-                aria-label={t('mobile.nextImage', 'Next image')}
-              >
-                <Share2 className="w-5 h-5 rotate-90" />
-              </button>
-              <button
-                onClick={prevImage}
-                className="bg-white/15 text-white p-3 rounded-full border border-white/30 hover:bg-white/25 transition"
-                aria-label={t('mobile.previousImage', 'Previous image')}
-              >
-                <Share2 className="w-5 h-5 -rotate-90" />
-              </button>
             </div>
           </div>
         </div>
@@ -226,10 +218,27 @@ export default function EventDetailsPage() {
       <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-10 lg:py-16 space-y-12">
         {/* Breadcrumbs */}
         <nav className="flex items-center gap-2 text-sm text-ink/60 dark:text-white/60">
-          <Link to="/" className="hover:text-primary font-medium">{t('calendar.title')}</Link>
+          <Link to="/" className="hover:text-primary font-medium">
+            {t('calendar.title')}
+          </Link>
           <span>/</span>
-          <span className="text-ink sparing dark:text-white font-semibold truncate">{event.title}</span>
+          <span className="text-ink sparing dark:text-white font-semibold truncate">
+            {event.title}
+          </span>
         </nav>
+
+        {/* Page Header */}
+        <div className="text-center lg:text-left">
+          <h1 className="text-3xl sm:text-4xl lg:text-5xl font-black text-ink dark:text-white mb-4">
+            {t('mobile.eventDetails', 'Event Details')}
+          </h1>
+          <p className="text-lg text-ink/70 dark:text-white/70 max-w-3xl">
+            {t(
+              'mobile.eventDetailsDescription',
+              'Complete information about the event including date, time, location, and organizer details.',
+            )}
+          </p>
+        </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 lg:gap-16">
           {/* Left Column */}
@@ -244,9 +253,13 @@ export default function EventDetailsPage() {
                     <p className="text-xs uppercase tracking-widest font-bold text-ink/60 dark:text-white/50">
                       {info.label}
                     </p>
-                    <p className="text-lg font-bold text-ink dark:text-white">{info.value}</p>
+                    <p className="text-lg font-bold text-ink dark:text-white">
+                      {info.value}
+                    </p>
                     {info.helper && (
-                      <p className="text-xs text-ink/60 dark:text-white/50">{info.helper}</p>
+                      <p className="text-xs text-ink/60 dark:text-white/50">
+                        {info.helper}
+                      </p>
                     )}
                   </div>
                 </div>
@@ -265,10 +278,16 @@ export default function EventDetailsPage() {
                       key={index}
                       onClick={() => setCurrentImageIndex(index)}
                       className={`flex-none w-64 aspect-video rounded-xl overflow-hidden snap-start border transition-all ${
-                        index === currentImageIndex ? 'border-primary shadow-lg' : 'border-transparent'
+                        index === currentImageIndex
+                          ? 'border-primary shadow-lg'
+                          : 'border-transparent'
                       }`}
                     >
-                      <img src={image} alt={`${event.title}-${index}`} className="w-full h-full object-cover" />
+                      <img
+                        src={image}
+                        alt={`${event.title}-${index}`}
+                        className="w-full h-full object-cover"
+                      />
                     </button>
                   ))}
                 </div>
@@ -316,11 +335,16 @@ export default function EventDetailsPage() {
             {event.organizerName && (
               <section className="bg-lavender/20 dark:bg-white/5 border border-primary/10 rounded-2xl p-6 flex items-center justify-between">
                 <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black" style={{ backgroundColor: cityColor }}>
+                  <div
+                    className="w-12 h-12 rounded-full flex items-center justify-center text-white font-black"
+                    style={{ backgroundColor: cityColor }}
+                  >
                     {event.organizerName[0]?.toUpperCase()}
                   </div>
                   <div>
-                    <p className="text-xs uppercase tracking-widest text-ink/60 dark:text-white/50 font-bold">{t('mobile.eventOrganizer', 'Organizer')}</p>
+                    <p className="text-xs uppercase tracking-widest text-ink/60 dark:text-white/50 font-bold">
+                      {t('mobile.eventOrganizer', 'Organizer')}
+                    </p>
                     <p className="text-lg font-bold">{event.organizerName}</p>
                   </div>
                 </div>
@@ -333,13 +357,15 @@ export default function EventDetailsPage() {
 
           {/* Right Column */}
           <aside className="space-y-6 lg:sticky lg:top-24">
-            <div className="bg-white dark:bg-ink/70 border border-lavender/20 dark:border-white/10 rounded-2xl shadow-xl p-6 space-y-6 lg:hidden">
+            <div className="bg-white dark:bg-ink/70 border border-lavender/20 dark:border-white/10 rounded-2xl shadow-xl p-6 space-y-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-xs uppercase tracking-[0.3em] text-ink/50 dark:text-white/50 font-bold">
                     {t('mobile.eventDetails', 'Event Details')}
                   </p>
-                  <p className="text-2xl font-black text-ink dark:text-white">{event.title}</p>
+                  <p className="text-2xl font-black text-ink dark:text-white">
+                    {event.title}
+                  </p>
                 </div>
                 <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">
                   {t('mobile.liveEvent', 'Live')}
@@ -351,14 +377,21 @@ export default function EventDetailsPage() {
                   <CalendarDays className="w-4 h-4 text-primary" />
                   <div>
                     <p className="font-semibold">{quickInfo[0].value}</p>
-                    <p className="text-ink/60 dark:text-white/60">{quickInfo[0].helper}</p>
+                    <p className="text-ink/60 dark:text-white/60">
+                      {quickInfo[0].helper}
+                    </p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">
                   <MapPin className="w-4 h-4 text-primary" />
                   <div>
-                    <p className="font-semibold">{event.location || t('mobile.locationTBA', 'Location TBD')}</p>
-                    <p className="text-ink/60 dark:text-white/60">{event.city}</p>
+                    <p className="font-semibold">
+                      {event.location ||
+                        t('mobile.locationTBA', 'Location TBD')}
+                    </p>
+                    <p className="text-ink/60 dark:text-white/60">
+                      {event.city}
+                    </p>
                   </div>
                 </div>
               </div>
@@ -386,7 +419,10 @@ export default function EventDetailsPage() {
                 </p>
                 <p className="text-lg font-bold">{event.organizerName}</p>
                 <p className="text-sm text-ink/60 dark:text-white/60">
-                  {t('mobile.organizerDescription', 'Connect with the organizer for additional details or partnership opportunities.')}
+                  {t(
+                    'mobile.organizerDescription',
+                    'Connect with the organizer for additional details or partnership opportunities.',
+                  )}
                 </p>
               </div>
             )}
@@ -394,5 +430,5 @@ export default function EventDetailsPage() {
         </div>
       </main>
     </div>
-  )
+  );
 }
