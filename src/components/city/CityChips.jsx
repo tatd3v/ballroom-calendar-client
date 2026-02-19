@@ -1,4 +1,3 @@
-import { getCityColor } from '../../utils/cities'
 
 const cn = (...classes) => classes.filter(Boolean).join(' ')
 
@@ -45,7 +44,7 @@ export default function CityChips({
 
       {cities.map((city) => {
         const isActive = selectedCity === city
-        const color = getCityColor(city, cityColors)
+        const color = cityColors[city] || '#EE0087'
         return (
           <button
             key={city}
