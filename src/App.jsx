@@ -5,7 +5,9 @@ import { AuthProvider } from './context/AuthContext'
 import { EventProvider } from './context/EventContext'
 import { ThemeProvider } from './context/ThemeContext'
 import Layout from './components/Layout'
-import FullPageLoader from './components/ui/CustomLoader'
+import RouteLoadingSkeleton from './components/ui/skeletons/RouteLoadingSkeleton'
+import LoginPageSkeleton from './components/ui/skeletons/LoginPageSkeleton'
+import { CalendarPageFallback, AdminPageFallback } from './components/ui/RouteFallbacks'
 
 // Lazy load pages for code splitting
 const CalendarPage = lazy(() => import('./pages/CalendarPage'))
@@ -23,22 +25,22 @@ function App() {
           <Routes>
             <Route path="/" element={<Layout />}>
               <Route index element={
-                <Suspense fallback={<FullPageLoader text={t('mobile.loading')} />}>
+                <Suspense fallback={<CalendarPageFallback />}>
                   <CalendarPage />
                 </Suspense>
               } />
               <Route path="admin" element={
-                <Suspense fallback={<FullPageLoader text={t('mobile.loading')} />}>
+                <Suspense fallback={<AdminPageFallback />}>
                   <AdminPage />
                 </Suspense>
               } />
               <Route path="login" element={
-                <Suspense fallback={<FullPageLoader text={t('mobile.loading')} />}>
+                <Suspense fallback={<LoginPageSkeleton />}>
                   <LoginPage />
                 </Suspense>
               } />
               <Route path="event/:eventSlug" element={
-                <Suspense fallback={<FullPageLoader text={t('mobile.loading')} />}>
+                <Suspense fallback={<RouteLoadingSkeleton />}>
                   <EventDetailsPage />
                 </Suspense>
               } />
