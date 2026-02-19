@@ -1,5 +1,5 @@
 import React from 'react'
-import { CustomLoader } from './CustomLoader'
+import CustomLoader from './CustomLoader'
 
 export function LoadingOverlay({ text = 'Loading...', show = true }) {
   if (!show) return null

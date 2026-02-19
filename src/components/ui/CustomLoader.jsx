@@ -2,27 +2,27 @@ import React from 'react'
 
 export default function CustomLoader({ size = 'medium', text = 'Loading...' }) {
   const sizeClasses = {
-    small: 'w-8 h-8',
-    medium: 'w-12 h-12', 
-    large: 'w-16 h-16',
-    xlarge: 'w-24 h-24'
+    small: 'w-16 h-16',
+    medium: 'w-24 h-24', 
+    large: 'w-32 h-32',
+    xlarge: 'w-40 h-40'
   }
 
   return (
-    <div className="flex flex-col items-center justify-center gap-4">
-      {/* Your custom vogue-loader.gif */}
-      <img 
-        src="/vogue-loader.gif"
-        alt="Loading..."
-        className={`${sizeClasses[size]}`}
-      />
-      
-      {/* Optional loading text */}
-      {text && (
+    <div className="fixed inset-0 bg-white/80 dark:bg-ink/80 backdrop-blur-sm flex items-center justify-center z-50">
+      <div className="flex flex-col items-center gap-4">
+        {/* Your custom vogue-loader.gif */}
+        <img 
+          src="/vogue-loader.gif"
+          alt="Loading..."
+          className={`${sizeClasses[size]}`}
+        />
+        
+        {/* Translated loading text */}
         <p className="text-sm text-ink/60 dark:text-white/60 font-medium animate-pulse">
           {text}
         </p>
-      )}
+      </div>
     </div>
   )
 }
@@ -35,7 +35,7 @@ export function FullPageLoader({ text = 'Loading...' }) {
         <img 
           src="/vogue-loader.gif"
           alt="Loading..."
-          className="w-20 h-20"
+          className="w-40 h-40"
         />
         <div className="text-center">
           <p className="text-ink/70 dark:text-white/70 font-medium">{text}</p>
@@ -48,9 +48,9 @@ export function FullPageLoader({ text = 'Loading...' }) {
 // Inline loader for buttons/cards
 export function InlineLoader({ size = 'small' }) {
   const sizeClasses = {
-    small: 'w-4 h-4',
-    medium: 'w-5 h-5',
-    large: 'w-6 h-6'
+    small: 'w-8 h-8',
+    medium: 'w-10 h-10',
+    large: 'w-12 h-12'
   }
 
   return (
