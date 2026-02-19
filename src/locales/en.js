@@ -53,9 +53,10 @@ export default {
     createFirst: 'Create your first event to get started',
     eventUpdated: 'Event updated successfully',
     eventCreated: 'Event created successfully',
-    eventDeleted: 'Event deleted',
+    eventDeleted: 'Event deleted successfully',
+    imageUploaded: 'Image uploaded successfully',
     somethingWrong: 'Something went wrong',
-    failedDelete: 'Failed to delete',
+    failedDelete: 'Failed to delete event',
     confirmDelete: 'Are you sure you want to delete this event?',
     eventTitle: 'Event title',
     eventDescription: 'Event description...',
@@ -160,6 +161,18 @@ export default {
     eventOrganizer: 'Event Organizer',
     follow: 'Follow',
     eventDetails: 'Event Details',
-    loading: 'Loading...'
+    eventDetailsDescription: 'Complete information about the event including date, time, location, and organizer details.',
+    loading: 'Loading...',
+    localTimezone: 'Local time',
+    contactOrganizer: 'Contact',
+    organizerDescription: 'Connect with the organizer for additional details or partnership opportunities.',
+    shareEvent: 'Share event',
+    nextImage: 'Next image',
+    previousImage: 'Previous image'
+  },
+  event: {
+    date: 'Date',
+    time: 'Time',
+    venue: 'Venue'
   }
 }

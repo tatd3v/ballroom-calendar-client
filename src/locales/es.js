@@ -60,9 +60,10 @@ export default {
     createFirst: 'Crea tu primer evento para comenzar',
     eventUpdated: 'Evento actualizado exitosamente',
     eventCreated: 'Evento creado exitosamente',
-    eventDeleted: 'Evento eliminado',
+    eventDeleted: 'Evento eliminado exitosamente',
+    imageUploaded: 'Imagen subida exitosamente',
     somethingWrong: 'Algo salió mal',
-    failedDelete: 'Error al eliminar',
+    failedDelete: 'Error al eliminar evento',
     confirmDelete: '¿Estás seguro de que deseas eliminar este evento?',
     eventTitle: 'Título del evento',
     eventDescription: 'Descripción del evento...',
@@ -161,6 +162,18 @@ export default {
     eventOrganizer: 'Organizador del Evento',
     follow: 'Seguir',
     eventDetails: 'Detalles del Evento',
-    loading: 'Cargando...'
+    eventDetailsDescription: 'Información completa sobre el evento incluyendo fecha, hora, lugar y detalles del organizador.',
+    loading: 'Cargando...',
+    localTimezone: 'Hora local',
+    contactOrganizer: 'Contacto',
+    organizerDescription: 'Conecta con el organizador para detalles adicionales u oportunidades de colaboración.',
+    shareEvent: 'Compartir evento',
+    nextImage: 'Siguiente imagen',
+    previousImage: 'Imagen anterior'
+  },
+  event: {
+    date: 'Fecha',
+    time: 'Hora',
+    venue: 'Lugar'
   }
 }
