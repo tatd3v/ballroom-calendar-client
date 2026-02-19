@@ -25,19 +25,17 @@ export const parseDateOnlyToLocal = (dateString) => {
 
   const trimmed = dateString.trim()
 
-  // Try native parsing first (handles ISO strings like 2024-05-01T00:00:00.000Z)
-  const parsed = new Date(trimmed)
-  if (!Number.isNaN(parsed.getTime())) {
-    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 12, 0, 0)
-  }
+  // Extract the date portion (YYYY-MM-DD) from ISO strings like "2025-03-15T00:00:00.000Z".
+  // We must NOT use getFullYear/getMonth/getDate on a UTC-midnight Date object because
+  // those return local-time components — in UTC-5 (Colombia) that shifts the date back one day.
+  const datePart = trimmed.length > 10 ? trimmed.slice(0, 10) : trimmed
 
-  const [year, month, day] = trimmed.split('-').map(Number)
+  const [year, month, day] = datePart.split('-').map(Number)
   if ([year, month, day].some(value => Number.isNaN(value))) {
     return null
   }
 
-  // Create date at noon in local time to avoid timezone shift issues
-  // This ensures the date displays as stored in DB regardless of user's timezone
+  // Create at noon local time so DST edge-cases never shift the day
   return new Date(year, month - 1, day, 12, 0, 0)
 }
 
