@@ -1,37 +1,25 @@
-import { useState, useEffect, useCallback } from 'react'
-import { useNavigate, useLocation } from 'react-router-dom'
+import { useState, useEffect, useCallback, useRef } from 'react'
+import { Navigate, useLocation } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
 import { useEvents } from '../context/EventContext'
-import { useTheme } from '../context/ThemeContext'
 import useMobile from '../hooks/useMobile'
 import { InlineLoader } from '../components/ui/CustomLoader'
+import MobileAdminExperience from '../components/mobile/MobileAdminExperience'
 import { 
   AlertTriangle, 
   CheckCircle, 
-  CalendarDays, 
-  MapPin, 
-  Clock,
   Plus,
-  Search,
   Save, 
   Edit, 
   Trash,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
-  Check,
   X, 
-  Settings,
-  Filter,
-  Upload,
-  Image,
-  Star
+  Upload
 } from 'lucide-react'
 
 export default function AdminPage() {
   // Context hooks first
-  const { user, canEditCity } = useAuth()
+  const { user } = useAuth()
   const { events, cities, cityColors, selectedCity, setSelectedCity, addEvent, updateEvent, deleteEvent } = useEvents()
   const { t, i18n } = useTranslation()
   const isMobile = useMobile()
