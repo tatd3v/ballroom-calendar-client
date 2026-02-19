@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react'
+import { useState, useMemo } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import { useAuth } from '../context/AuthContext'
@@ -8,6 +8,7 @@ import useMobile from '../hooks/useMobile'
 import MobileHeader from '../components/mobile/MobileHeader'
 import MobileExperienceMenu from '../components/mobile/MobileExperienceMenu'
 import MobilePreferences from '../components/mobile/MobilePreferences'
+import { changeAppLanguage } from '../utils/locale'
 import { 
   UserRound, 
   Lock, 
@@ -30,7 +31,8 @@ export default function LoginPage() {
   const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { theme, toggleTheme } = useTheme()
-  const { menuOpen, toggleMenu, closeMenu } = useMobile()
+  const isMobile = useMobile()
+  const [menuOpen, setMenuOpen] = useState(false)
   
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -76,22 +78,25 @@ export default function LoginPage() {
 
   return (
     <div className="font-display min-h-screen bg-lavender/30 dark:bg-background-dark flex flex-col">
-      <MobileHeader
-        title={t('calendar.title')}
-        subtitle={t('nav.subtitle')}
-        menuOpen={menuOpen}
-        onMenuToggle={toggleMenu}
-      />
-
-      <MobileExperienceMenu
-        open={menuOpen}
-        onClose={closeMenu}
-        title={t('calendar.title')}
-        subtitle={t('nav.subtitle')}
-        sections={menuSections}
-        showUserCard={Boolean(user)}
-        enableLogout={Boolean(user)}
-      />
+      {isMobile && (
+        <>
+          <MobileHeader
+            title={t('calendar.title')}
+            subtitle={t('nav.subtitle')}
+            menuOpen={menuOpen}
+            onMenuToggle={() => setMenuOpen(true)}
+          />
+          <MobileExperienceMenu
+            open={menuOpen}
+            onClose={() => setMenuOpen(false)}
+            title={t('calendar.title')}
+            subtitle={t('nav.subtitle')}
+            sections={menuSections}
+            showUserCard={Boolean(user)}
+            enableLogout={Boolean(user)}
+          />
+        </>
+      )}
 
       <div className="flex-1 flex flex-col justify-center items-center px-4 py-10">
         <div className="w-full max-w-md bg-white dark:bg-ink rounded-3xl shadow-2xl border border-primary/10 p-8 space-y-6">
