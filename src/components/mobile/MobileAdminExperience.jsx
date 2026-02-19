@@ -2,27 +2,25 @@ import { useCallback, useEffect, useState, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
-  CalendarDays,
   Settings,
   Plus,
-  Menu,
   Search,
   MoreVertical,
   MapPin,
   Clock,
+  CalendarDays,
 } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useEvents } from '../../context/EventContext'
 import { useTheme } from '../../context/ThemeContext'
 import MobileExperienceMenu from './MobileExperienceMenu'
 import MobileEventFormModal from './MobileEventFormModal'
+import MobileHeader from './MobileHeader'
+import MobileAdminSkeleton from '../ui/skeletons/MobileAdminSkeleton'
 import { formatTimeWithMeridiem, formatDateWithLocale } from '../../utils/time'
 import { getLocaleCode } from '../../utils/locale'
 import { InlineLoader } from '../ui/CustomLoader'
-import { useEventForm } from '../../hooks/useEventForm'
-import { useImageUpload } from '../../hooks/useImageUpload'
-import { useEventFilters } from '../../hooks/useEventFilters'
-import { useMobileMenuSections } from '../../hooks/useMobileMenuSections'
+import { useEventForm, useImageUpload, useEventFilters, useMobileMenuSections } from '../../hooks'
 import { eventToFormData, formDataToEvent, createEmptyForm } from '../../utils/eventHelpers'
 
 export default function MobileAdminExperience({ initialEditEvent }) {
@@ -148,7 +146,7 @@ export default function MobileAdminExperience({ initialEditEvent }) {
   const displayEvents = useMemo(() => {
     return filteredEvents.map(event => ({
       ...event,
-      displayDate: formatDateWithLocale(event?.date, {
+      displayDate: formatDateWithLocale(event?.start || event?.date, {
         locale,
         fallbackLabel: t('admin.dateTBA')
       })
@@ -220,27 +218,14 @@ export default function MobileAdminExperience({ initialEditEvent }) {
 
   return (
     <div className="font-display dark:bg-background-dark text-ink dark:text-white min-h-screen pb-28">
-      {/* Header — matches calendar mobile navbar */}
-      <header className="sticky top-0 z-40 bg-white/80 dark:bg-background-dark/80 backdrop-blur-md border-b border-primary/10">
-        <div className="flex items-center justify-between px-4 h-16">
-          <div className="flex items-center gap-2">
-            <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
-              <Settings className="w-5 h-5 text-white" />
-            </div>
-            <div>
-              <h1 className="font-bold text-lg tracking-tight text-ink dark:text-white">{t('admin.manageEvents')}</h1>
-              <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">{managedEventsCount} {t('admin.totalEvents')}</p>
-            </div>
-          </div>
-          <button
-            className="p-2 hover:bg-primary/10 rounded-lg transition-colors"
-            aria-label={t('mobile.openMenu')}
-            onClick={() => setMenuOpen(true)}
-          >
-            <Menu className="w-6 h-6" />
-          </button>
-        </div>
-      </header>
+      {/* Header - Using reusable MobileHeader component */}
+      <MobileHeader
+        title={t('admin.manageEvents')}
+        subtitle={`${managedEventsCount} ${t('admin.totalEvents')}`}
+        icon="settings"
+        menuOpen={menuOpen}
+        onMenuToggle={() => setMenuOpen(true)}
+      />
 
       {/* Sub-header: Create + Search + Filters */}
       <div className="px-4 pt-4 pb-2 space-y-3 bg-white dark:bg-background-dark border-b border-primary/5">
@@ -338,16 +323,11 @@ export default function MobileAdminExperience({ initialEditEvent }) {
       />
 
       {/* Main Content */}
+      {loading ? (
+        <MobileAdminSkeleton />
+      ) : (
       <main className="px-4 py-6 pb-24 space-y-4">
-        {loading && (
-          <div className="space-y-3">
-            {Array.from({ length: 3 }).map((_, idx) => (
-              <div key={idx} className="animate-pulse bg-white/70 dark:bg-white/5 h-28 rounded-2xl" />
-            ))}
-          </div>
-        )}
-
-        {!loading && filteredEvents.length === 0 && (
+        {displayEvents.length === 0 && (
           <div className="text-center py-16 opacity-60">
             <CalendarDays className="w-10 h-10 mx-auto mb-3 text-primary/60" />
             <p className="text-sm font-medium text-ink/70 dark:text-white/70">{t('admin.noEvents')}</p>
@@ -355,7 +335,7 @@ export default function MobileAdminExperience({ initialEditEvent }) {
           </div>
         )}
 
-        {filteredEvents.map((event) => (
+        {displayEvents.map((event) => (
           <div 
             key={event.id}
             data-event-card={event.id}
@@ -432,6 +412,7 @@ export default function MobileAdminExperience({ initialEditEvent }) {
           </div>
         ))}
       </main>
+      )}
 
       {/* Edit Form Modal - Using reusable component */}
       <MobileEventFormModal
