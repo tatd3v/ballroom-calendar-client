@@ -23,7 +23,15 @@ export const parseDateOnlyToLocal = (dateString) => {
     return null
   }
 
-  const [year, month, day] = dateString.split('-').map(Number)
+  const trimmed = dateString.trim()
+
+  // Try native parsing first (handles ISO strings like 2024-05-01T00:00:00.000Z)
+  const parsed = new Date(trimmed)
+  if (!Number.isNaN(parsed.getTime())) {
+    return new Date(parsed.getFullYear(), parsed.getMonth(), parsed.getDate(), 12, 0, 0)
+  }
+
+  const [year, month, day] = trimmed.split('-').map(Number)
   if ([year, month, day].some(value => Number.isNaN(value))) {
     return null
   }
