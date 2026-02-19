@@ -40,7 +40,8 @@ export const useEventFilters = (events, filters = {}) => {
 
     // Apply status filter and add status to events
     filtered = filtered.map(event => {
-      const startDate = event.date ? parseDateOnlyToLocal(event.date) : null
+      const dateVal = event.start || event.date
+      const startDate = dateVal ? parseDateOnlyToLocal(dateVal) : null
       const status = startDate && !Number.isNaN(startDate.getTime()) && startDate < today ? 'past' : 'live'
       return { ...event, status }
     })
@@ -51,8 +52,8 @@ export const useEventFilters = (events, filters = {}) => {
 
     // Sort by date
     return filtered.sort((a, b) => {
-      const dateA = a.date ? parseDateOnlyToLocal(a.date)?.getTime() || 0 : 0
-      const dateB = b.date ? parseDateOnlyToLocal(b.date)?.getTime() || 0 : 0
+      const dateA = parseDateOnlyToLocal(a.start || a.date)?.getTime() || 0
+      const dateB = parseDateOnlyToLocal(b.start || b.date)?.getTime() || 0
       return dateA - dateB
     })
   }, [events, searchTerm, statusFilter, cityFilter, userCity, userRole])
