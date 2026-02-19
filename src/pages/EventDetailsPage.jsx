@@ -331,7 +331,66 @@ export default function EventDetailsPage() {
             )}
           </div>
 
-          {/* Right Column removed per desktop requirements */}
+          {/* Right Column */}
+          <aside className="space-y-6 lg:sticky lg:top-24">
+            <div className="bg-white dark:bg-ink/70 border border-lavender/20 dark:border-white/10 rounded-2xl shadow-xl p-6 space-y-6 lg:hidden">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-xs uppercase tracking-[0.3em] text-ink/50 dark:text-white/50 font-bold">
+                    {t('mobile.eventDetails', 'Event Details')}
+                  </p>
+                  <p className="text-2xl font-black text-ink dark:text-white">{event.title}</p>
+                </div>
+                <span className="px-3 py-1 bg-primary/10 text-primary text-xs font-bold rounded-full">
+                  {t('mobile.liveEvent', 'Live')}
+                </span>
+              </div>
+
+              <div className="space-y-4 text-sm">
+                <div className="flex items-center gap-3">
+                  <CalendarDays className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="font-semibold">{quickInfo[0].value}</p>
+                    <p className="text-ink/60 dark:text-white/60">{quickInfo[0].helper}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <MapPin className="w-4 h-4 text-primary" />
+                  <div>
+                    <p className="font-semibold">{event.location || t('mobile.locationTBA', 'Location TBD')}</p>
+                    <p className="text-ink/60 dark:text-white/60">{event.city}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="flex flex-col gap-3">
+                <button
+                  onClick={() => navigate('/calendar')}
+                  className="w-full bg-primary text-white font-bold py-4 rounded-xl shadow-lg shadow-primary/20 hover:bg-primary/90 transition"
+                >
+                  {t('mobile.backToCalendar', 'Back to Calendar')}
+                </button>
+                <button
+                  onClick={handleShare}
+                  className="w-full bg-lavender/30 text-primary font-semibold py-3 rounded-xl hover:bg-lavender/50 transition"
+                >
+                  {t('mobile.shareEvent', 'Share event')}
+                </button>
+              </div>
+            </div>
+
+            {event.organizerName && (
+              <div className="bg-white dark:bg-ink/70 border border-lavender/20 dark:border-white/10 rounded-2xl p-6 space-y-3">
+                <p className="text-xs uppercase tracking-[0.3em] text-ink/50 dark:text-white/50 font-bold">
+                  {t('mobile.contactOrganizer', 'Contact')}
+                </p>
+                <p className="text-lg font-bold">{event.organizerName}</p>
+                <p className="text-sm text-ink/60 dark:text-white/60">
+                  {t('mobile.organizerDescription', 'Connect with the organizer for additional details or partnership opportunities.')}
+                </p>
+              </div>
+            )}
+          </aside>
         </div>
       </main>
     </div>
