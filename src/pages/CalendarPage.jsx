@@ -1,8 +1,8 @@
-import { useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { useTranslation } from 'react-i18next'
 import EventCalendar from '../components/EventCalendar'
 import CityFilter from '../components/CityFilter'
+import CalendarSkeleton from '../components/CalendarSkeleton'
 import MobileCalendarExperience from '../components/mobile/MobileCalendarExperience'
 import { useEvents } from '../context/EventContext'
 import { CalendarDays, TrendingUp } from 'lucide-react'
@@ -74,33 +74,6 @@ export default function CalendarPage() {
       ) : (
         <EventCalendar onEventClick={handleEventClick} />
       )}
-
-      {selectedEvent && (
-        <EventModal 
-          event={selectedEvent} 
-          onClose={() => setSelectedEvent(null)} 
-        />
-      )}
-    </div>
-  )
-}
-
-function CalendarSkeleton() {
-  return (
-    <div className="glass-strong rounded-2xl p-4 md:p-6 space-y-4">
-      <div className="flex items-center justify-between">
-        <div className="h-5 w-32 bg-lavender-100 dark:bg-[#222222] rounded-lg animate-pulse" />
-        <div className="flex gap-2">
-          <div className="h-9 w-20 bg-lavender-100 dark:bg-[#222222] rounded-xl animate-pulse" />
-          <div className="h-9 w-20 bg-lavender-100 dark:bg-[#222222] rounded-xl animate-pulse" />
-          <div className="h-9 w-20 bg-lavender-100 dark:bg-[#222222] rounded-xl animate-pulse" />
-        </div>
-      </div>
-      <div className="grid grid-cols-7 gap-px">
-        {Array.from({ length: 35 }).map((_, i) => (
-          <div key={i} className="aspect-square bg-lavender-50 dark:bg-[#2A2A2A] rounded-lg animate-pulse" style={{ animationDelay: `${i * 30}ms` }} />
-        ))}
-      </div>
     </div>
   )
 }
