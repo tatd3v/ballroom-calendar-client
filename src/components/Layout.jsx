@@ -35,12 +35,12 @@ export default function Layout() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6">
           <div className="flex items-center justify-between h-20">
             <Link to="/" className="flex items-center gap-2.5 group">
-              <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-primary to-orange flex items-center justify-center shadow-sm group-hover:shadow-glow-primary transition-shadow duration-300">
+              <div className="w-10 h-10 bg-primary rounded-xl flex items-center justify-center">
                 <CalendarDays className="w-5 h-5 text-white" />
               </div>
               <div className="hidden sm:block">
-                <span className="font-extrabold text-ink dark:text-white tracking-tight">{t('calendar.title')}</span>
-                <span className="block text-[10px] font-medium text-ink-300 dark:text-ink-200 -mt-0.5 tracking-wide">{t('nav.subtitle')}</span>
+                <span className="font-bold text-lg tracking-tight text-ink dark:text-white">{t('calendar.title')}</span>
+                <span className="block text-[10px] uppercase tracking-widest text-primary font-semibold">{t('nav.subtitle')}</span>
               </div>
             </Link>
 
