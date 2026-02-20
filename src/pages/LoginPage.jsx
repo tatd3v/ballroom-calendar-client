@@ -172,13 +172,6 @@ export default function LoginPage() {
           </button>
         </form>
 
-        <div className="text-center text-sm text-ink/60 dark:text-white/60">
-          {t('login.noAccount', { defaultValue: "Don't have an account?" })}
-          <button type="button" className="text-primary font-bold ml-1 hover:underline">
-            {t('login.joinCommunity', { defaultValue: 'Join the community' })}
-          </button>
-        </div>
-
         <div className="pt-6 border-t border-lavender-100 dark:border-white/10">
           <div className="flex items-center gap-2 mb-3">
             <Sparkles className="w-4 h-4 text-lime-400" />
