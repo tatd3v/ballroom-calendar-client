@@ -182,7 +182,7 @@ export default function EventDetailsPage() {
 
         <div className="absolute top-0 left-0 right-0 flex items-center justify-between p-4 sm:p-6">
           <button
-            onClick={() => navigate(-1)}
+            onClick={() => navigate('/')}
             className="bg-white/20 backdrop-blur-md text-white p-2 rounded-full hover:bg-white/40 transition-colors"
           >
             <ArrowLeft className="w-5 h-5" />
