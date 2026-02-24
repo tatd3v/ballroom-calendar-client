@@ -1,8 +1,10 @@
+import { useState } from 'react'
 import { X, Save, Upload } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
 import MobileFormInput from './MobileFormInput'
 import MobileFormTextarea from './MobileFormTextarea'
 import MobileFormSelect from './MobileFormSelect'
+import RichTextEditor from '../ui/RichTextEditor'
 
 /**
  * Reusable mobile event form modal component
@@ -25,11 +27,27 @@ export default function MobileEventFormModal({
   onImageRemove
 }) {
   const { t } = useTranslation()
+  const [organizerInput, setOrganizerInput] = useState('')
 
   if (!show) return null
 
   const handleFieldChange = (field, value) => {
     onFormDataChange({ ...formData, [field]: value })
+  }
+
+  const handleOrganizerKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const name = organizerInput.trim()
+      if (name && !(formData.organizers || []).includes(name)) {
+        handleFieldChange('organizers', [...(formData.organizers || []), name])
+      }
+      setOrganizerInput('')
+    }
+  }
+
+  const removeOrganizer = (name) => {
+    handleFieldChange('organizers', (formData.organizers || []).filter(o => o !== name))
   }
 
   return (
@@ -111,14 +129,52 @@ export default function MobileEventFormModal({
             error={formErrors.location}
           />
 
-          <MobileFormTextarea
-            label={t('admin.description', 'Description')}
-            value={formData.description}
-            onChange={(e) => handleFieldChange('description', e.target.value)}
-            placeholder={t('admin.eventDescription', 'Enter event description')}
-            rows={4}
-            error={formErrors.description}
-          />
+          {/* Description */}
+          <div className="px-4 mb-4">
+            <label className="block text-sm font-semibold text-ink dark:text-white mb-2">
+              {t('admin.description', 'Description')}
+            </label>
+            <RichTextEditor
+              value={formData.description || ''}
+              onChange={(html) => handleFieldChange('description', html)}
+              placeholder={t('admin.eventDescription', 'Enter event description')}
+            />
+            {formErrors.description && (
+              <p className="mt-1 text-xs text-red-500 dark:text-red-400">{formErrors.description}</p>
+            )}
+          </div>
+
+          {/* Organizers */}
+          <div>
+            <label className="block text-sm font-semibold text-ink dark:text-white mb-2">
+              {t('admin.organizers', 'Organizers')}
+            </label>
+            <div className="border border-lavender/20 dark:border-white/10 rounded-xl bg-white dark:bg-white/5 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all p-2 flex flex-wrap gap-1.5 min-h-[44px]">
+              {(formData.organizers || []).map(name => (
+                <span key={name} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-semibold">
+                  {name}
+                  <button type="button" onClick={() => removeOrganizer(name)} className="hover:text-primary/60 transition-colors">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              <input
+                type="text"
+                value={organizerInput}
+                onChange={(e) => setOrganizerInput(e.target.value)}
+                onKeyDown={handleOrganizerKeyDown}
+                onBlur={() => {
+                  const name = organizerInput.trim()
+                  if (name && !(formData.organizers || []).includes(name)) {
+                    handleFieldChange('organizers', [...(formData.organizers || []), name])
+                  }
+                  setOrganizerInput('')
+                }}
+                className="flex-1 min-w-[140px] text-sm bg-transparent text-ink dark:text-white placeholder:text-ink/40 dark:placeholder:text-white/40 outline-none px-1.5 py-0.5"
+                placeholder={t('admin.organizersPlaceholder', 'Type a name and press Enter')}
+              />
+            </div>
+          </div>
 
           {/* Image Upload */}
           <div>
