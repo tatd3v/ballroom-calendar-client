@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_API_URL || '/api';
+const API_URL = import.meta.env.VITE_BACKEND_URL || '/api';
 
 function getToken() {
   return localStorage.getItem('calendar_token');
@@ -27,15 +27,15 @@ async function request(endpoint, options = {}) {
 
 export const authApi = {
   login: (email, password) =>
-    request('/auth/login', {
+    request('/api/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
     }),
 
-  me: () => request('/auth/me'),
+  me: () => request('/api/auth/me'),
 
   register: (userData) =>
-    request('/auth/register', {
+    request('/api/auth/register', {
       method: 'POST',
       body: JSON.stringify(userData),
     }),
@@ -61,6 +61,8 @@ export const eventsApi = {
   getById: (id, { lang } = {}) => request(`/events/${id}${buildQuery({ lang })}`),
 
   getCities: () => request('/events/cities'),
+
+  getStatuses: () => request('/events/statuses'),
 
   create: (eventData) =>
     request('/events', {
