@@ -8,7 +8,7 @@
       "fix/*": true
     }
   },
-  "buildCommand": "npm run build",
+  "buildCommand": "npm run build:prod",
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": "vite",
