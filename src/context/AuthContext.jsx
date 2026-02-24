@@ -12,12 +12,6 @@ export function AuthProvider({ children }) {
     const stored = localStorage.getItem('calendar_user')
     if (token && stored) {
       setUser(JSON.parse(stored))
-      authApi.me().then(userData => {
-        setUser(userData)
-        localStorage.setItem('calendar_user', JSON.stringify(userData))
-      }).catch(() => {
-        logout()
-      })
     }
     setLoading(false)
   }, [])
