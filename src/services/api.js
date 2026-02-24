@@ -1,4 +1,4 @@
-const API_URL = import.meta.env.VITE_BACKEND_URL || '/api';
+const API_URL = import.meta.env.VITE_BACKEND_URL + '/api';
 
 function getToken() {
   return localStorage.getItem('calendar_token');
@@ -6,9 +6,13 @@ function getToken() {
 
 async function request(endpoint, options = {}) {
   const token = getToken();
+
+  // Handle FormData differently (don't set Content-Type header)
+  const isFormData = options.body instanceof FormData;
   const headers = {
-    'Content-Type': 'application/json',
     ...(token && { Authorization: `Bearer ${token}` }),
+    ...(options.headers &&
+      !isFormData && { 'Content-Type': 'application/json' }),
     ...options.headers,
   };
 
@@ -18,8 +22,15 @@ async function request(endpoint, options = {}) {
   });
 
   if (!response.ok) {
-    const error = await response.json().catch(() => ({ error: 'Request failed' }));
-    throw new Error(error.error || 'Request failed');
+    let errorMessage = 'Request failed';
+    try {
+      const errorData = await response.json();
+      errorMessage = errorData.error || errorData.message || errorMessage;
+    } catch (e) {
+      // If JSON parsing fails, use status text
+      errorMessage = response.statusText || errorMessage;
+    }
+    throw new Error(errorMessage);
   }
 
   return response.json();
@@ -27,38 +38,34 @@ async function request(endpoint, options = {}) {
 
 export const authApi = {
   login: (email, password) =>
-    request('/api/auth/login', {
+    request('/auth/login', {
       method: 'POST',
       body: JSON.stringify({ email, password }),
-    }),
-
-  me: () => request('/api/auth/me'),
-
-  register: (userData) =>
-    request('/api/auth/register', {
-      method: 'POST',
-      body: JSON.stringify(userData),
     }),
 };
 
 function buildQuery(params = {}) {
-  const definedEntries = Object.entries(params).filter(([, value]) => value !== undefined && value !== null)
-  if (!definedEntries.length) return ''
-  const searchParams = new URLSearchParams()
-  definedEntries.forEach(([key, value]) => searchParams.append(key, value))
-  return `?${searchParams.toString()}`
+  const definedEntries = Object.entries(params).filter(
+    ([, value]) => value !== undefined && value !== null,
+  );
+  if (!definedEntries.length) return '';
+  const searchParams = new URLSearchParams();
+  definedEntries.forEach(([key, value]) => searchParams.append(key, value));
+  return `?${searchParams.toString()}`;
 }
 
 export const eventsApi = {
-  getAll: ({ city, lang } = {}) => {
+  getAll: ({ cityId, city, lang } = {}) => {
     const params = {
+      ...(cityId && cityId !== 'all' ? { cityId } : {}),
       ...(city && city !== 'all' ? { city } : {}),
       ...(lang ? { lang } : {}),
-    }
-    return request(`/events${buildQuery(params)}`)
+    };
+    return request(`/events${buildQuery(params)}`);
   },
 
-  getById: (id, { lang } = {}) => request(`/events/${id}${buildQuery({ lang })}`),
+  getById: (id, { lang } = {}) =>
+    request(`/events/${id}${buildQuery({ lang })}`),
 
   getCities: () => request('/events/cities'),
 
@@ -80,6 +87,17 @@ export const eventsApi = {
     request(`/events/${id}`, {
       method: 'DELETE',
     }),
+
+  uploadImage: (imageFile) => {
+    const formData = new FormData();
+    formData.append('image', imageFile);
+
+    return request('/events/upload-image', {
+      method: 'POST',
+      body: formData,
+      headers: {}, // Let browser set Content-Type for FormData
+    });
+  },
 };
 
 export default { authApi, eventsApi };
