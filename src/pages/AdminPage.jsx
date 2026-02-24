@@ -8,9 +8,11 @@ import MobileAdminExperience from '../components/mobile/MobileAdminExperience'
 import AdminPageSkeleton from '../components/ui/skeletons/AdminPageSkeleton'
 import Toast from '../components/ui/Toast'
 import EventFormModal from '../components/EventFormModal'
+import EventSearchFilters from '../components/ui/EventSearchFilters'
 import { formatDateWithLocale, formatTimeWithMeridiem, parseDateOnlyToLocal } from '../utils/time'
 import { eventToFormData, formDataToEvent } from '../utils/eventHelpers'
 import { useMobile, useToast, useEventForm, useImageUpload, usePagination, useClickOutside } from '../hooks'
+import { eventsApi } from '../services/api'
 import { 
   Plus,
   Edit, 
@@ -53,10 +55,63 @@ export default function AdminPage() {
   const [cityDropdownOpen, setCityDropdownOpen] = useState(false)
   const [timeDropdownOpen, setTimeDropdownOpen] = useState(false)
   const [timeFilter, setTimeFilter] = useState('upcoming30')
+  const [searchTerm, setSearchTerm] = useState('')
+  const [filterCity, setFilterCity] = useState('')
+  const [filterStatus, setFilterStatus] = useState('')
+  const [filterCities, setFilterCities] = useState([])
+  const [filterStatuses, setFilterStatuses] = useState([])
+  const [loadingFilters, setLoadingFilters] = useState(true)
   
   // Click outside handlers
   const cityDropdownRef = useClickOutside(() => setCityDropdownOpen(false), cityDropdownOpen)
   const timeDropdownRef = useClickOutside(() => setTimeDropdownOpen(false), timeDropdownOpen)
+
+  // Filter handlers
+  const handleSearch = useCallback((term) => {
+    setSearchTerm(term)
+  }, [])
+
+  const handleCityFilter = useCallback((city) => {
+    setFilterCity(city)
+  }, [])
+
+  const handleStatusFilter = useCallback((status) => {
+    setFilterStatus(status)
+  }, [])
+
+  const handleClearFilters = useCallback(() => {
+    setSearchTerm('')
+    setFilterCity('')
+    setFilterStatus('')
+  }, [])
+
+  const handleResetFilters = useCallback(() => {
+    handleClearFilters()
+    setSelectedCity('all')
+    setTimeFilter('upcoming30')
+  }, [handleClearFilters, setSelectedCity])
+
+  // Fetch filter options from API
+  useEffect(() => {
+    const fetchFilterOptions = async () => {
+      try {
+        setLoadingFilters(true)
+        const [citiesResponse, statusesData] = await Promise.all([
+          eventsApi.getCities(),
+          eventsApi.getStatuses()
+        ])
+        setFilterCities(Array.isArray(citiesResponse.cities) ? citiesResponse.cities : citiesResponse)
+        setFilterStatuses(statusesData)
+      } catch (error) {
+        console.error('Failed to fetch filter options:', error)
+        showError(t('admin.somethingWrong'))
+      } finally {
+        setLoadingFilters(false)
+      }
+    }
+
+    fetchFilterOptions()
+  }, [t, showError])
 
   // Pagination — must be called before any early returns (Rules of Hooks)
   const userEvents = !user || isMobile
@@ -64,6 +119,19 @@ export default function AdminPage() {
     : user.role === 'admin'
       ? selectedCity === 'all' ? (events || []) : (events || []).filter(e => e.city === selectedCity)
       : (events || []).filter(e => e.city === user.city)
+
+  // Apply all filters to events
+  const filteredEvents = (userEvents || []).filter(event => {
+    const matchesSearch = !searchTerm || 
+      event.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      event.description?.toLowerCase().includes(searchTerm.toLowerCase())
+    
+    const matchesCity = !filterCity || event.city === filterCity
+    
+    const matchesStatus = !filterStatus || event.status === filterStatus
+    
+    return matchesSearch && matchesCity && matchesStatus
+  })
 
   const {
     currentPage,
@@ -73,7 +141,7 @@ export default function AdminPage() {
     previousPage,
     hasNextPage,
     hasPreviousPage
-  } = usePagination(userEvents, 10)
+  } = usePagination(filteredEvents, 10)
 
   // ALL useCallback hooks must be declared before any early returns (Rules of Hooks)
   const handleEdit = useCallback((event) => {
@@ -207,82 +275,17 @@ export default function AdminPage() {
         </button>
       </div>
 
-      {/* Filters & Sort */}
-      <div className="bg-white/50 dark:bg-ink-700/50 backdrop-blur-sm p-3 sm:p-4 rounded-xl mb-6 border border-primary/5 dark:border-lavender/10 flex flex-col sm:flex-row gap-3 sm:gap-4 items-start sm:items-center">
-        <div className="flex items-center gap-2 text-sm font-medium text-primary/80 dark:text-ink-200">
-          <Filter className="w-4 h-4" />
-          {t('admin.quickFilters')}:
-        </div>
-        {/* City dropdown */}
-        <div className="relative" ref={cityDropdownRef}>
-          <button
-            onClick={() => { setCityDropdownOpen(!cityDropdownOpen); setTimeDropdownOpen(false) }}
-            className="bg-transparent dark:bg-white/5 border border-primary/20 dark:border-lavender/10 rounded-lg text-sm text-ink dark:text-gray-200 focus:ring-primary focus:border-primary py-1.5 transition-colors flex items-center gap-2 px-3"
-          >
-            <span>{selectedCity === 'all' ? t('admin.allCities') : selectedCity}</span>
-            <ChevronDown className="w-4 h-4" />
-          </button>
-          {cityDropdownOpen && (
-            <div className="absolute left-0 mt-3 w-64 sm:w-72 bg-white dark:bg-[#222222] rounded-xl shadow-2xl border border-primary/10 dark:border-0 dark:lavender-border dark:shadow-black/40 overflow-hidden z-[60]">
-              <div className="py-2">
-                {[{ value: 'all', label: t('admin.allCities') }, ...cities.map(c => ({ value: c, label: c }))].map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => { setSelectedCity(opt.value); setCityDropdownOpen(false) }}
-                    className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
-                      selectedCity === opt.value
-                        ? 'bg-primary/5 dark:bg-white/5 cursor-default'
-                        : 'hover:bg-primary/5 dark:hover:bg-transparent dark:lavender-hover'
-                    }`}
-                  >
-                    <span className={`font-medium ${
-                      selectedCity === opt.value
-                        ? 'font-semibold text-ink dark:text-white'
-                        : 'text-ink/70 dark:text-gray-200'
-                    }`}>{opt.label}</span>
-                    {selectedCity === opt.value && <Check className="w-5 h-5 text-primary" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Time filter dropdown */}
-        <div className="relative" ref={timeDropdownRef}>
-          <button
-            onClick={() => { setTimeDropdownOpen(!timeDropdownOpen); setCityDropdownOpen(false) }}
-            className="bg-transparent dark:bg-white/5 border border-primary/20 dark:border-lavender/10 rounded-lg text-sm text-ink dark:text-gray-200 focus:ring-primary focus:border-primary py-1.5 transition-colors flex items-center gap-2 px-3"
-          >
-            <span>{getTimeFilterLabel()}</span>
-            <ChevronDown className="w-4 h-4" />
-          </button>
-          {timeDropdownOpen && (
-            <div className="absolute left-0 mt-3 w-64 sm:w-72 bg-white dark:bg-[#222222] rounded-xl shadow-2xl border border-primary/10 dark:border-0 dark:lavender-border dark:shadow-black/40 overflow-hidden z-[60]">
-              <div className="py-2">
-                {timeFilterOptions.map(opt => (
-                  <button
-                    key={opt.value}
-                    onClick={() => { setTimeFilter(opt.value); setTimeDropdownOpen(false) }}
-                    className={`w-full flex items-center justify-between px-4 py-3 transition-colors ${
-                      timeFilter === opt.value
-                        ? 'bg-primary/5 dark:bg-white/5 cursor-default'
-                        : 'hover:bg-primary/5 dark:hover:bg-transparent dark:lavender-hover'
-                    }`}
-                  >
-                    <span className={`font-medium ${
-                      timeFilter === opt.value
-                        ? 'font-semibold text-ink dark:text-white'
-                        : 'text-ink/70 dark:text-gray-200'
-                    }`}>{opt.label}</span>
-                    {timeFilter === opt.value && <Check className="w-5 h-5 text-primary" />}
-                  </button>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
+      {/* Search & Filters */}
+      <EventSearchFilters
+        onSearch={handleSearch}
+        onCityFilter={handleCityFilter}
+        onStatusFilter={handleStatusFilter}
+        onClearFilters={handleClearFilters}
+        onReset={handleResetFilters}
+        cities={filterCities}
+        statuses={filterStatuses}
+        loading={loadingFilters}
+      />
 
       {/* Event Form Modal - Using reusable component */}
       <EventFormModal
@@ -408,7 +411,7 @@ export default function AdminPage() {
         {/* Pagination */}
         <div className="px-6 py-4 flex items-center justify-between border-t border-lavender/10 dark:border-lavender/20 bg-lavender/5 dark:bg-ink-700/30">
           <div className="text-sm text-ink-400 dark:text-ink-300">
-            {t('admin.showing')} <span className="font-bold text-ink dark:text-ink-100">{paginatedEvents.length === 0 ? 0 : (currentPage - 1) * 10 + 1}</span> {t('admin.to')} <span className="font-bold text-ink dark:text-ink-100">{Math.min(currentPage * 10, userEvents.length)}</span> {t('admin.of')} <span className="font-bold text-ink dark:text-ink-100">{userEvents.length}</span> {t('admin.entries')}
+            {t('admin.showing')} <span className="font-bold text-ink dark:text-ink-100">{paginatedEvents.length === 0 ? 0 : (currentPage - 1) * 10 + 1}</span> {t('admin.to')} <span className="font-bold text-ink dark:text-ink-100">{Math.min(currentPage * 10, filteredEvents.length)}</span> {t('admin.of')} <span className="font-bold text-ink dark:text-ink-100">{filteredEvents.length}</span> {t('admin.entries')}
           </div>
           {totalPages > 1 && (
             <div className="flex items-center gap-2">
