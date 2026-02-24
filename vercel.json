@@ -12,10 +12,9 @@
   "outputDirectory": "dist",
   "installCommand": "npm install",
   "framework": "vite",
-  "rewrites": [
-    {
+  "rewrites": [{
       "source": "/api/(.*)",
-      "destination": "http://3.20.223.167/api/$1"
+      "destination": "https://3.20.223.167/api/$1"
     },
     {
       "source": "/(.*)",
