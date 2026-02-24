@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react'
+import { useMemo, useState, useRef, useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import {
@@ -16,17 +16,42 @@ import { useAuth } from '../../context/AuthContext'
 import MobileExperienceMenu from './MobileExperienceMenu'
 import MobileHeader from './MobileHeader'
 import MobileCalendarSkeleton from '../ui/skeletons/MobileCalendarSkeleton'
+import CustomLoader from '../ui/CustomLoader'
 import { formatTimeWithMeridiem, parseDateOnlyToLocal } from '../../utils/time'
 import { getLocaleCode, changeAppLanguage } from '../../utils/locale'
 import { getEventUrl } from '../../utils/slugify'
 
 export default function MobileCalendarExperience() {
   const navigate = useNavigate()
-  const { filteredEvents, events, cities, cityColors, selectedCity, setSelectedCity, loading } = useEvents()
+  const { 
+    filteredEvents, 
+    events, 
+    cities, 
+    cityColors, 
+    selectedCity, 
+    setSelectedCity, 
+    loading, 
+    loadingMore, 
+    hasMore, 
+    loadMoreEvents 
+  } = useEvents()
   const { theme, toggleTheme } = useTheme()
   const { i18n, t } = useTranslation()
   const { user } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  
+  // Infinite scroll
+  const observer = useRef()
+  const lastEventRef = useCallback((node) => {
+    if (loadingMore) return
+    if (observer.current) observer.current.disconnect()
+    observer.current = new IntersectionObserver((entries) => {
+      if (entries[0].isIntersecting && hasMore) {
+        loadMoreEvents(10) // Load 10 more events on mobile
+      }
+    })
+    if (node) observer.current.observe(node)
+  }, [loadingMore, hasMore, loadMoreEvents])
 
   const locale = getLocaleCode(i18n.language)
   const monthLabel = useMemo(() => {
@@ -136,12 +161,13 @@ export default function MobileCalendarExperience() {
     ]
   }, [t, user, handleNavigate])
 
-  const renderEventCard = (event) => {
+  const renderEventCard = (event, index, isLast = false) => {
     const timeLabel = getTimeDisplay(event)
     const color = cityColors[event.city] || activeCityColor
     return (
       <button
         key={event.id}
+        ref={isLast ? lastEventRef : null}
         onClick={() => handleEventSelect(event)}
         className="w-full text-left p-4 rounded-xl flex gap-4 items-center shadow-sm hover:shadow-md transition-shadow cursor-pointer border-l-4"
         style={{
@@ -262,16 +288,29 @@ export default function MobileCalendarExperience() {
                 </div>
               )}
 
-              {groupedEvents.map((group) => (
-                <div key={group.date}>
-                  <h3 className="text-base font-black uppercase tracking-widest text-ink/70 dark:text-white/70 mb-3 px-1">
-                    {formatDayHeading(group.date)}
-                  </h3>
-                  <div className="space-y-3">
-                    {group.items.map(renderEventCard)}
+              {groupedEvents.map((group, groupIndex) => {
+                const isLastGroup = groupIndex === groupedEvents.length - 1
+                return (
+                  <div key={group.date}>
+                    <h3 className="text-base font-black uppercase tracking-widest text-ink/70 dark:text-white/70 mb-3 px-1">
+                      {formatDayHeading(group.date)}
+                    </h3>
+                    <div className="space-y-3">
+                      {group.items.map((event, eventIndex) => {
+                        const isLastEvent = isLastGroup && eventIndex === group.items.length - 1
+                        return renderEventCard(event, eventIndex, isLastEvent)
+                      })}
+                    </div>
                   </div>
+                )
+              })}
+              
+              {/* Loading more indicator */}
+              {loadingMore && (
+                <div className="flex justify-center py-6">
+                  <CustomLoader />
                 </div>
-              ))}
+              )}
             </section>
           </>
         )}
