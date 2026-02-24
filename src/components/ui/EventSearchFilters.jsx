@@ -10,6 +10,7 @@ export default function EventSearchFilters({
   onReset,
   cities = [],
   statuses = [],
+  loading = false,
   className = ""
 }) {
   const { t } = useTranslation()
@@ -98,13 +99,18 @@ export default function EventSearchFilters({
                   value={selectedCity}
                   onChange={(e) => handleCityChange(e.target.value)}
                   className="w-full h-11 px-4 bg-lavender/30 dark:bg-white/5 border border-lavender/20 dark:border-white/10 rounded-xl appearance-none focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-ink/70 dark:text-white/70"
+                  disabled={loading}
                 >
                   <option value="">{t('search.allCities')}</option>
-                  {cities.map((city) => (
-                    <option key={city} value={city}>
-                      {city}
-                    </option>
-                  ))}
+                  {loading ? (
+                    <option value="">{t('search.loading')}...</option>
+                  ) : (
+                    cities.map((city) => (
+                      <option key={city} value={city}>
+                        {city}
+                      </option>
+                    ))
+                  )}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/40 dark:text-white/40" />
               </div>
@@ -120,13 +126,18 @@ export default function EventSearchFilters({
                   value={selectedStatus}
                   onChange={(e) => handleStatusChange(e.target.value)}
                   className="w-full h-11 px-4 bg-lavender/30 dark:bg-white/5 border border-lavender/20 dark:border-white/10 rounded-xl appearance-none focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all text-ink/70 dark:text-white/70"
+                  disabled={loading}
                 >
                   <option value="">{t('search.allStatuses')}</option>
-                  {statuses.map((status) => (
-                    <option key={status.value || status} value={status.value || status}>
-                      {status.label || status}
-                    </option>
-                  ))}
+                  {loading ? (
+                    <option value="">{t('search.loading')}...</option>
+                  ) : (
+                    statuses.map((status) => (
+                      <option key={status.value || status} value={status.value || status}>
+                        {status.label || status}
+                      </option>
+                    ))
+                  )}
                 </select>
                 <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 pointer-events-none text-ink/40 dark:text-white/40" />
               </div>
