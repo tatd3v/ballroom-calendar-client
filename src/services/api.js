@@ -55,11 +55,13 @@ function buildQuery(params = {}) {
 }
 
 export const eventsApi = {
-  getAll: ({ cityId, city, lang } = {}) => {
+  getAll: ({ cityId, city, lang, page = 1, limit = 10 } = {}) => {
     const params = {
       ...(cityId && cityId !== 'all' ? { cityId } : {}),
       ...(city && city !== 'all' ? { city } : {}),
       ...(lang ? { lang } : {}),
+      ...(page && { page }),
+      ...(limit && { limit }),
     };
     return request(`/events${buildQuery(params)}`);
   },
