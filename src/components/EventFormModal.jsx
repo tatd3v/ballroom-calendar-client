@@ -1,5 +1,7 @@
+import { useState } from 'react'
 import { X, Save, Upload } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
+import RichTextEditor from './ui/RichTextEditor'
 
 /**
  * Reusable desktop event form modal component
@@ -21,11 +23,27 @@ export default function EventFormModal({
   inputClasses = "w-full px-3.5 py-2.5 border border-lavender-100 dark:border-lavender/20 rounded-xl focus:ring-2 focus:ring-primary/20 focus:border-primary text-sm bg-white dark:bg-ink-700 text-ink dark:text-ink-100 placeholder:text-ink-300 dark:placeholder-ink-400 transition-all duration-200"
 }) {
   const { t } = useTranslation()
+  const [organizerInput, setOrganizerInput] = useState('')
 
   if (!show) return null
 
   const handleFieldChange = (field, value) => {
     onFormDataChange({ ...formData, [field]: value })
+  }
+
+  const handleOrganizerKeyDown = (e) => {
+    if (e.key === 'Enter' || e.key === ',') {
+      e.preventDefault()
+      const name = organizerInput.trim()
+      if (name && !(formData.organizers || []).includes(name)) {
+        handleFieldChange('organizers', [...(formData.organizers || []), name])
+      }
+      setOrganizerInput('')
+    }
+  }
+
+  const removeOrganizer = (name) => {
+    handleFieldChange('organizers', (formData.organizers || []).filter(o => o !== name))
   }
 
   return (
@@ -127,13 +145,43 @@ export default function EventFormModal({
             <label className="block text-sm font-semibold text-ink dark:text-white mb-1.5">
               {t('admin.description', 'Description')}
             </label>
-            <textarea
+            <RichTextEditor
               value={formData.description || ''}
-              onChange={(e) => handleFieldChange('description', e.target.value)}
-              className={inputClasses}
-              rows={4}
+              onChange={(html) => handleFieldChange('description', html)}
               placeholder={t('admin.eventDescription', 'Enter event description')}
             />
+          </div>
+
+          {/* Organizers */}
+          <div>
+            <label className="block text-sm font-semibold text-ink dark:text-white mb-1.5">
+              {t('admin.organizers', 'Organizers')}
+            </label>
+            <div className="border border-lavender-100 dark:border-lavender/20 rounded-xl bg-white dark:bg-ink-700 focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all p-2 flex flex-wrap gap-1.5 min-h-[44px]">
+              {(formData.organizers || []).map(name => (
+                <span key={name} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-semibold">
+                  {name}
+                  <button type="button" onClick={() => removeOrganizer(name)} className="hover:text-primary/60 transition-colors">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              ))}
+              <input
+                type="text"
+                value={organizerInput}
+                onChange={(e) => setOrganizerInput(e.target.value)}
+                onKeyDown={handleOrganizerKeyDown}
+                onBlur={() => {
+                  const name = organizerInput.trim()
+                  if (name && !(formData.organizers || []).includes(name)) {
+                    handleFieldChange('organizers', [...(formData.organizers || []), name])
+                  }
+                  setOrganizerInput('')
+                }}
+                className="flex-1 min-w-[140px] text-sm bg-transparent text-ink dark:text-ink-100 placeholder:text-ink-300 dark:placeholder-ink-400 outline-none px-1.5 py-0.5"
+                placeholder={t('admin.organizersPlaceholder', 'Type a name and press Enter')}
+              />
+            </div>
           </div>
 
           {/* Image Upload */}
