@@ -16,6 +16,7 @@ export const eventToFormData = (event) => {
     time: event.time || '',
     location: event.location || '',
     description: event.description || '',
+    organizers: event.organizers || [],
     imageUrl: event.imageUrl || ''
   }
 }
@@ -41,6 +42,7 @@ export const createEmptyForm = (defaults = {}) => {
     time: '',
     location: '',
     description: '',
+    organizers: [],
     imageUrl: '',
     ...defaults
   }
