@@ -1,22 +1,4 @@
 [[redirects]]
-  from = "/api/*"
-  to = "http://3.131.85.173/api/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api-docs"
-  to = "http://3.131.85.173/api-docs"
-  status = 200
-  force = true
-
-[[redirects]]
-  from = "/api-docs/*"
-  to = "http://3.131.85.173/api-docs/:splat"
-  status = 200
-  force = true
-
-[[redirects]]
   from = "/*"
   to = "/index.html"
   status = 200
