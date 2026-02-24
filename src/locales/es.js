@@ -5,11 +5,26 @@ export default {
     login: 'Iniciar Sesión',
     logout: 'Cerrar Sesión',
     admin: 'Admin',
-    subtitle: 'BALLROOM COLOMBIA',
+    subtitle: 'COLOMBIA BALLROOM SCENE',
     events: 'Eventos',
     analytics: 'Analíticas',
     team: 'Equipo',
     settings: 'Configuración'
+  },
+  search: {
+    title: 'Búsqueda y Filtros',
+    eventName: 'Nombre del Evento',
+    city: 'Ciudad',
+    status: 'Estado',
+    allCities: 'Todas las Ciudades',
+    allStatuses: 'Todos los Estados',
+    placeholder: 'Buscar por palabras clave...',
+    clearFilters: 'Limpiar Filtros',
+    reset: 'Restablecer',
+    collapse: 'Contraer',
+    expand: 'Expandir',
+    upcoming: 'Próximo',
+    loading: 'Cargando'
   },
   calendar: {
     title: 'Calendario Kunt',
@@ -68,6 +83,8 @@ export default {
     eventTitle: 'Título del evento',
     eventDescription: 'Descripción del evento...',
     eventImage: 'Imagen del evento',
+    organizers: 'Organizadores',
+    organizersPlaceholder: 'Escribe un nombre y presiona Enter',
     totalEvents: 'Total de Eventos',
     cities: 'Ciudades',
     upcoming: 'Próximos',
@@ -101,7 +118,7 @@ export default {
     quickLogin: 'Acceso Rápido'
   },
   footer: {
-    title: 'Calendario de Eventos Ballroom Colombia',
+    title: 'Calendario de Eventos Colombia Ballroom Scene',
     online: 'En línea'
   },
   settings: {

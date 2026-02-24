@@ -5,11 +5,26 @@ export default {
     login: 'Login',
     logout: 'Logout',
     admin: 'Admin',
-    subtitle: 'BALLROOM COLOMBIA',
+    subtitle: 'COLOMBIA BALLROOM SCENE',
     events: 'Events',
     analytics: 'Analytics',
     team: 'Team',
     settings: 'Settings'
+  },
+  search: {
+    title: 'Search & Filters',
+    eventName: 'Event Name',
+    city: 'City',
+    status: 'Status',
+    allCities: 'All Cities',
+    allStatuses: 'All Statuses',
+    placeholder: 'Search by keywords...',
+    clearFilters: 'Clear Filters',
+    reset: 'Reset',
+    collapse: 'Collapse',
+    expand: 'Expand',
+    upcoming: 'Upcoming',
+    loading: 'Loading'
   },
   calendar: {
     title: 'Kunt Calendar',
@@ -61,6 +76,8 @@ export default {
     eventTitle: 'Event title',
     eventDescription: 'Event description...',
     eventImage: "Event image",
+    organizers: 'Organizers',
+    organizersPlaceholder: 'Type a name and press Enter',
     endDate: 'End Date',
     city: 'City',
     cancel: 'Cancel',
@@ -100,7 +117,7 @@ export default {
     quickLogin: 'Quick Login'
   },
   footer: {
-    title: 'Ballroom Colombia Event Calendar',
+    title: 'Colombia Ballroom Scene Event Calendar',
     online: 'Online'
   },
   settings: {
