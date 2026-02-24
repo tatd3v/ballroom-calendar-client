@@ -12,6 +12,7 @@ export const useEventForm = (initialData = {}) => {
     time: '',
     location: '',
     description: '',
+    organizers: [],
     imageUrl: '',
     ...initialData
   }
