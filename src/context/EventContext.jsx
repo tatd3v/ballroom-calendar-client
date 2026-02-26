@@ -219,7 +219,6 @@ export function EventProvider({ children }) {
         addEvent,
         updateEvent,
         deleteEvent,
-        loading,
         refetch,
       }}
     >
