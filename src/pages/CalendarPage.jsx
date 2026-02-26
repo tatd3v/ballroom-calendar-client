@@ -12,7 +12,7 @@ import { getEventUrl } from '../utils/slugify'
 export default function CalendarPage() {
   const navigate = useNavigate()
   const isMobile = useMobile()
-  const { filteredEvents, selectedCity, loading, events } = useEvents()
+  const { filteredEvents, selectedCity, loading, events, cityColors } = useEvents()
   const { t } = useTranslation()
 
   const handleEventClick = (event) => {
@@ -59,7 +59,7 @@ export default function CalendarPage() {
           {selectedCity !== 'all' && (
             <div 
               className="px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm"
-              style={{ backgroundColor: 'var(--active-city-color, #EE0087)' }}
+              style={{ backgroundColor: cityColors[selectedCity] || '#EE0087' }}
             >
               {selectedCity}
             </div>
