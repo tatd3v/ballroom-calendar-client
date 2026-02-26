@@ -139,7 +139,7 @@ export function EventProvider({ children }) {
     fetchEvents(currentLang);
   }, [fetchEvents, currentLang]);
 
-  useEffect(() => {
+  const refetchCities = useCallback(() => {
     eventsApi
       .getCities()
       .then((data) => {
@@ -148,6 +148,10 @@ export function EventProvider({ children }) {
       })
       .catch(() => {});
   }, []);
+
+  useEffect(() => {
+    refetchCities();
+  }, [refetchCities]);
 
   const cityCounts = useMemo(() => {
     if (!Array.isArray(events)) return {}
@@ -220,6 +224,7 @@ export function EventProvider({ children }) {
         updateEvent,
         deleteEvent,
         refetch,
+        refetchCities,
       }}
     >
       {children}
