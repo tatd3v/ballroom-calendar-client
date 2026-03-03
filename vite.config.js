@@ -50,6 +50,7 @@ export default defineConfig(({ mode }) => {
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      disabled: true, // Disable to stop blinking and multiple fetches
       manifest: {
         name: 'Event Calendar',
         short_name: 'Calendar',
