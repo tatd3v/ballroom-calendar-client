@@ -14,6 +14,7 @@ export default function Layout() {
   const location = useLocation()
   const [menuOpen, setMenuOpen] = useState(false)
   const [languageDropdownOpen, setLanguageDropdownOpen] = useState(false)
+  const [mobileLanguageDropdownOpen, setMobileLanguageDropdownOpen] = useState(false)
   const isMobile = useMobile()
 
   const hideChrome = isMobile
@@ -22,6 +23,8 @@ export default function Layout() {
 
   useEffect(() => {
     setMenuOpen(false)
+    setLanguageDropdownOpen(false)
+    setMobileLanguageDropdownOpen(false)
   }, [location.pathname])
 
   return (
@@ -127,9 +130,9 @@ export default function Layout() {
               {/* Mobile: Language + Theme */}
               <div className="flex items-center gap-2 px-4 pt-2">
                 <LanguageDropdown
-                  isOpen={languageDropdownOpen}
-                  onToggle={() => setLanguageDropdownOpen(!languageDropdownOpen)}
-                  onClose={() => setLanguageDropdownOpen(false)}
+                  isOpen={mobileLanguageDropdownOpen}
+                  onToggle={() => setMobileLanguageDropdownOpen(!mobileLanguageDropdownOpen)}
+                  onClose={() => setMobileLanguageDropdownOpen(false)}
                   className="relative flex-1"
                   isMobile={true}
                 />
