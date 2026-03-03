@@ -20,8 +20,6 @@ async function request(endpoint, options = {}) {
   const response = await fetch(`${API_URL}${endpoint}`, {
     ...options,
     headers,
-    // Ignore SSL errors for self-signed certificates
-    agent: undefined,
   });
 
   if (!response.ok) {
