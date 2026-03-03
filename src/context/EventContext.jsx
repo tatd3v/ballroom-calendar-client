@@ -65,7 +65,8 @@ export function EventProvider({ children }) {
       setFetching(true);
 
       try {
-        const data = await eventsApi.getAll({ lang, page, limit: actualLimit });
+        // Remove lang parameter to avoid slow backend translation
+        const data = await eventsApi.getAll({ page, limit: actualLimit });
         const normalized = Array.isArray(data.events || data)
           ? (data.events || data).map(normalizeEvent)
           : [];
@@ -126,7 +127,7 @@ export function EventProvider({ children }) {
         fetchEvents(currentLang, nextPage, mobileLimit, true);
       }
     },
-    [loadingMore, hasMore, currentPage, currentLang, fetchEvents],
+    [loadingMore, hasMore, currentPage, fetchEvents],
   );
 
   const resetEvents = useCallback(() => {
