@@ -7,11 +7,17 @@ export default defineConfig(({ mode }) => {
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), '');
 
+  // Extract backend URL from environment
+  const backendUrl = env.VITE_BACKEND_URL || 'http://localhost:3002/api';
+  
+  // For development proxy, extract the base URL without /api
+  const proxyTarget = backendUrl.replace('/api', '');
+
   return {
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: proxyTarget,
         changeOrigin: true,
         secure: false,
       },
@@ -22,7 +28,7 @@ export default defineConfig(({ mode }) => {
     },
   },
   define: {
-    __VITE_BACKEND_URL__: JSON.stringify(env.VITE_BACKEND_URL || '/api'),
+    __VITE_BACKEND_URL__: JSON.stringify(backendUrl),
   },
   preview: {
     headers: {
