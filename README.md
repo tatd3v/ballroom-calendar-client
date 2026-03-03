@@ -122,7 +122,6 @@ npm run preview
 const API_URL = '/api';
 
 // Requests go through Vercel rewrites to HTTPS backend
-// /api/events → https://3.20.223.167/api/events
 ```
 
 ## 🚀 Deployment
@@ -137,7 +136,7 @@ const API_URL = '/api';
 
 #### Configuration Files
 
-**vercel.json**
+#### vercel.json
 
 ```json
 {
@@ -147,7 +146,7 @@ const API_URL = '/api';
   "rewrites": [
     {
       "source": "/api/(.*)",
-      "destination": "https://3.20.223.167/api/$1"
+      "destination": "https://your-server-ip/api/$1"
     },
     {
       "source": "/(.*)",
@@ -187,7 +186,7 @@ vercel --prod
 curl https://your-app.vercel.app/api/events
 
 # Check backend is accessible
-curl https://3.20.223.167/api/events
+curl https://your-server-ip/api/events
 ```
 
 #### Mixed Content Errors
