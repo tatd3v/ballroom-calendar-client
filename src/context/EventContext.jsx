@@ -156,7 +156,7 @@ export function EventProvider({ children }) {
 
   useEffect(() => {
     fetchEvents(currentLang);
-  }, [fetchEvents, currentLang]);
+  }, [currentLang]); // Remove fetchEvents to prevent infinite loop
 
   const refetchCities = useCallback(() => {
     eventsApi
@@ -170,7 +170,7 @@ export function EventProvider({ children }) {
 
   useEffect(() => {
     refetchCities();
-  }, [refetchCities]);
+  }, []); // Remove refetchCities to prevent infinite loop
 
   const cityCounts = useMemo(() => {
     if (!Array.isArray(events)) return {};
