@@ -1,4 +1,5 @@
 const API_URL = 'http://3.20.223.167/api';
+console.log('API_URL:', API_URL);
 
 function getToken() {
   return localStorage.getItem('calendar_token');
