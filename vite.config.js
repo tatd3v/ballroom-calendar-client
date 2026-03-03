@@ -21,6 +21,9 @@ export default defineConfig(({ mode }) => {
         "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
     },
   },
+  define: {
+    __VITE_BACKEND_URL__: JSON.stringify(env.VITE_BACKEND_URL || '/api'),
+  },
   preview: {
     headers: {
       'Content-Security-Policy':
