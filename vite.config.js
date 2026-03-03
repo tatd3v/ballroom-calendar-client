@@ -18,7 +18,7 @@ export default defineConfig(({ mode }) => {
     },
     headers: {
       'Content-Security-Policy':
-        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; manifest-src 'self'; worker-src 'self' blob:;",
     },
   },
   define: {
@@ -27,7 +27,7 @@ export default defineConfig(({ mode }) => {
   preview: {
     headers: {
       'Content-Security-Policy':
-        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; manifest-src 'self'; worker-src 'self' blob:;",
     },
   },
   build: {
@@ -58,25 +58,50 @@ export default defineConfig(({ mode }) => {
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
-          // Icons temporarily removed - add pwa-192x192.png and pwa-512x512.png to public folder when available
+          // Add PWA icons to public folder when available
+          // {
+          //   src: 'pwa-192x192.png',
+          //   sizes: '192x192',
+          //   type: 'image/png'
+          // },
+          // {
+          //   src: 'pwa-512x512.png',
+          //   sizes: '512x512',
+          //   type: 'image/png'
+          // }
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Only cache static assets, not API requests
         runtimeCaching: [
           {
-            urlPattern: /\/api\//i,
+            // Cache images from Cloudinary
+            urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
+          {
+            // Cache static assets with NetworkFirst strategy
+            urlPattern: /\.(?:js|css|html|ico|png|svg)$/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'static-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24,
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
-              networkTimeoutSeconds: 10,
             },
           },
         ],
+        // Don't cache API requests - let them always go to network
+        navigateFallback: null,
       },
       devOptions: {
         enabled: true,
