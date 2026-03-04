@@ -19,6 +19,7 @@ import { changeAppLanguage } from '../../utils/locale'
 export default function MobileHeader({ 
   title, 
   subtitle, 
+  statsSubtitle,
   icon = CalendarDays,
   menuOpen,
   onMenuToggle,
@@ -50,7 +51,9 @@ export default function MobileHeader({
           </div>
           <div>
             <h1 className="font-bold text-lg tracking-tight text-ink dark:text-white">{title}</h1>
-            <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">{subtitle}</p>
+            <p className="text-[10px] uppercase tracking-widest text-primary font-semibold">
+              {statsSubtitle || subtitle}
+            </p>
           </div>
         </div>
         
