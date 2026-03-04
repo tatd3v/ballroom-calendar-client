@@ -8,10 +8,11 @@ import {
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { eventsApi } from '../services/api';
+import { translationCache, translationMetrics, backendIntegration } from '../services/translationService';
 
 const EventContext = createContext(null);
 
-const SOURCE_LANG = 'es';
+const SOURCE_LANG = 'es' // Matches backend SOURCE_LANG
 
 export function EventProvider({ children }) {
   const [events, setEvents] = useState([]);
@@ -41,7 +42,8 @@ export function EventProvider({ children }) {
     async (lang = currentLang, page = 1, limit = null, append = false) => {
       // Use calendar limit for desktop, mobile limit for infinite scroll
       const actualLimit = limit || calendarLimit;
-      
+      const startTime = Date.now()
+
       if (append) {
         setLoadingMore(true);
       } else {
@@ -50,19 +52,60 @@ export function EventProvider({ children }) {
         setCurrentPage(1);
         setHasMore(true);
       }
-      
+
       try {
-        const data = await eventsApi.getAll({ lang, page, limit: actualLimit });
-        const normalized = Array.isArray(data.events || data) 
-          ? (data.events || data).map(normalizeEvent) 
+        // Check cache first for instant response
+        const cacheKey = translationCache.getEventsKey(lang, 'all', page);
+        const cachedData = translationCache.get(cacheKey, true); // Use backend TTL
+
+        if (cachedData && !append) {
+          // Use cached data immediately
+          translationMetrics.trackCacheHit(cacheKey, 'backend');
+          setEvents(cachedData.events);
+          setHasMore(cachedData.hasMore);
+          setTotalEvents(cachedData.total);
+          setCurrentPage(cachedData.page);
+          setLoading(false);
+
+          // Track cache performance
+          const duration = Date.now() - startTime;
+          translationMetrics.trackBackendCall('/events', duration, cachedData.events.length);
+          return;
+        }
+
+        // Build API URL with language parameter (backend integration)
+        const apiUrl = backendIntegration.buildApiUrl('/api/events', lang, { 
+          limit: actualLimit,
+          page: page 
+        });
+
+        const response = await fetch(apiUrl);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+        }
+
+        const data = await response.json();
+        const normalized = Array.isArray(data.events || data)
+          ? (data.events || data).map(normalizeEvent)
           : [];
-        
+
+        // Cache the results with backend TTL
+        const cacheData = {
+          events: normalized,
+          hasMore: data.pagination?.hasMore || normalized.length < actualLimit,
+          total: data.pagination?.total || normalized.length,
+          page: data.pagination?.page || page,
+          lang: lang,
+          timestamp: Date.now()
+        };
+        translationCache.set(cacheKey, cacheData, true); // Use backend TTL
+
         if (append) {
           setEvents(prev => [...prev, ...normalized]);
         } else {
           setEvents(normalized);
         }
-        
+
         // Update pagination info
         if (data.pagination) {
           setHasMore(data.pagination.hasMore);
@@ -75,7 +118,7 @@ export function EventProvider({ children }) {
           setCurrentPage(page);
         }
 
-        // Cache only first page
+        // Cache only first page in localStorage (legacy support)
         if (!append && normalized.length > 0) {
           localStorage.setItem(
             'calendar_events_cache',
@@ -86,12 +129,20 @@ export function EventProvider({ children }) {
             Date.now().toString(),
           );
         }
+
+        // Track backend performance
+        const duration = Date.now() - startTime;
+        translationMetrics.trackBackendCall('/events', duration, normalized.length);
+        translationMetrics.trackCacheMiss(cacheKey, 'backend');
+
       } catch (error) {
-        console.log('API error, checking cache...');
+        console.error('Failed to fetch events:', error);
+
+        // Fallback to localStorage cache
         const cached = localStorage.getItem('calendar_events_cache');
         if (cached && !append) {
-          const parsed = JSON.parse(cached);
-          setEvents(parsed.map(normalizeEvent));
+          const parsedCache = JSON.parse(cached);
+          setEvents(parsedCache.map(normalizeEvent));
           setHasMore(false);
         }
       } finally {
@@ -216,6 +267,7 @@ export function EventProvider({ children }) {
         calendarLimit,
         loadMoreEvents,
         resetEvents,
+        fetchEvents,
         addEvent,
         updateEvent,
         deleteEvent,
