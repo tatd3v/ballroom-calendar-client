@@ -159,8 +159,8 @@ export default function EventFormFields({
           {t('admin.organizers', 'Organizers')}
         </label>
         <div className={`border ${isMobile ? 'border-lavender/20 dark:border-white/10 bg-white dark:bg-white/5' : 'border-lavender-100 dark:border-lavender/20 bg-white dark:bg-ink-700'} rounded-xl focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-all p-2 flex flex-wrap gap-1.5 min-h-[44px]`}>
-          {(formData.organizers || []).map(name => (
-            <span key={name} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-semibold">
+          {(formData.organizers || []).map((name, index) => (
+            <span key={`${name}-${index}`} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-primary/10 text-primary text-xs font-semibold">
               {name}
               <button type="button" onClick={() => removeOrganizer(name)} className="hover:text-primary/60 transition-colors">
                 <X className="w-3 h-3" />
