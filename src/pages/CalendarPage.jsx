@@ -12,7 +12,7 @@ import { getEventUrl } from '../utils/slugify'
 export default function CalendarPage() {
   const navigate = useNavigate()
   const isMobile = useMobile()
-  const { filteredEvents, selectedCity, loading, events } = useEvents()
+  const { filteredEvents, selectedCity, loading, events, futureEventsCount } = useEvents()
   const { t } = useTranslation()
 
   const handleEventClick = (event) => {
@@ -40,12 +40,12 @@ export default function CalendarPage() {
             <span className="flex items-center gap-1.5">
               <CalendarDays className="w-3.5 h-3.5" />
               {filteredEvents.length} {filteredEvents.length !== 1 ? t('calendar.events') : t('calendar.event')}
-              {selectedCity !== 'all' && <> {t('calendar.in')} <strong className="text-ink-500 dark:text-ink-100">{selectedCity}</strong></>}
+              {selectedCity !== 'all' ? <> {t('calendar.in')} <strong className="text-ink-500 dark:text-ink-100">{selectedCity}</strong></> : <> {t('calendar.in')} <strong className="text-ink-500 dark:text-ink-100">{t('admin.allCities')}</strong></>}
             </span>
-            {upcomingCount > 0 && (
+            {futureEventsCount > 0 && (
               <span className="flex items-center gap-1 text-lime-500">
                 <TrendingUp className="w-3.5 h-3.5" />
-                {upcomingCount} {t('calendar.upcoming')}
+                {futureEventsCount} {t('calendar.upcomingTotal')}
               </span>
             )}
           </p>
@@ -53,9 +53,6 @@ export default function CalendarPage() {
 
         {/* Stats pills */}
         <div className="flex items-center gap-2">
-          <div className="px-3 py-1.5 rounded-xl text-xs font-bold bg-lavender-50 border border-lavender-100 text-ink-400 dark:bg-[#222222] dark:border-border-dark dark:text-gray-400">
-            {events.length} {t('calendar.total')}
-          </div>
           {selectedCity !== 'all' && (
             <div 
               className="px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm"
