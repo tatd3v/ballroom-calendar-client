@@ -1,22 +1,40 @@
-import { useRef, useEffect } from 'react'
+import { useRef, useEffect, useState } from 'react'
 import { Globe, ChevronDown, Check } from 'lucide-react'
 import { useTranslation } from 'react-i18next'
-import { changeAppLanguage } from '../../utils/locale'
+import { changeAppLanguageOptimistic } from '../../utils/locale'
+import { useTranslationManager } from '../../hooks/useTranslationManager'
 
 export default function LanguageDropdown({ 
-  isOpen, 
-  onToggle, 
-  onClose,
+  isOpen: externalIsOpen, 
+  onToggle: externalOnToggle, 
+  onClose: externalOnClose,
   className = "",
   buttonClassName = "",
   dropdownClassName = "",
-  isMobile = false 
+  isMobile = false,
+  selfContained = false,
+  useOptimisticChange = true // New prop for using optimized translation
 }) {
   const { i18n } = useTranslation()
   const dropdownRef = useRef(null)
+  const translationManager = useTranslationManager()
+  
+  // Self-contained state management
+  const [internalIsOpen, setInternalIsOpen] = useState(false)
+  
+  // Use external state if provided, otherwise use internal state
+  const isOpen = selfContained ? internalIsOpen : (externalIsOpen ?? false)
+  const onToggle = selfContained ? () => setInternalIsOpen(!isOpen) : (externalOnToggle ?? (() => {}))
+  const onClose = selfContained ? () => setInternalIsOpen(false) : (externalOnClose ?? (() => {}))
 
-  const changeLanguage = (lng) => {
-    changeAppLanguage(i18n, lng)
+  const changeLanguage = async (lng) => {
+    if (useOptimisticChange) {
+      // Use optimized translation manager for instant UI updates
+      await translationManager.changeLanguageWithCache(lng)
+    } else {
+      // Fallback to legacy method
+      changeAppLanguageOptimistic(i18n, lng)
+    }
     onClose()
   }
 
