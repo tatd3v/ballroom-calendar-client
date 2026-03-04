@@ -1,5 +1,6 @@
 import React from 'react'
 import CustomLoader from './CustomLoader'
+import { InlineLoader } from './CustomLoader'
 
 export function LoadingOverlay({ text = 'Loading...', show = true }) {
   if (!show) return null
@@ -29,21 +30,5 @@ export function LoadingButton({ loading, children, disabled, size = 'medium', ..
         {children}
       </span>
     </button>
-  )
-}
-
-export function InlineLoader({ size = 'small' }) {
-  const sizeClasses = {
-    small: 'w-4 h-4',
-    medium: 'w-5 h-5',
-    large: 'w-6 h-6'
-  }
-
-  return (
-    <img 
-      src="/vogue-loader.gif"
-      alt="Loading..."
-      className={`${sizeClasses[size]}`}
-    />
   )
 }
