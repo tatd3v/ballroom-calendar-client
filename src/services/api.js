@@ -73,6 +73,10 @@ export const eventsApi = {
 
   getStatuses: () => request('/events/statuses'),
 
+  getFutureCount: () => request('/events/future-count'),
+
+  getUpcomingCountsByCity: () => request('/events/upcoming-counts-by-city'),
+
   create: (eventData) =>
     request('/events', {
       method: 'POST',
