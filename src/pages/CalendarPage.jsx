@@ -5,14 +5,14 @@ import CityFilter from '../components/CityFilter'
 import CalendarSkeleton from '../components/ui/skeletons/CalendarSkeleton'
 import MobileCalendarExperience from '../components/mobile/MobileCalendarExperience'
 import { useEvents } from '../context/EventContext'
-import { CalendarDays, TrendingUp } from 'lucide-react'
+import { CalendarDays, TrendingUp, RefreshCw } from 'lucide-react'
 import useMobile from '../hooks/useMobile'
 import { getEventUrl } from '../utils/slugify'
 
 export default function CalendarPage() {
   const navigate = useNavigate()
   const isMobile = useMobile()
-  const { filteredEvents, selectedCity, loading, events, futureEventsCount } = useEvents()
+  const { filteredEvents, selectedCity, loading, cityColors, refetchCities, futureEventsCount } = useEvents()
   const { t } = useTranslation()
 
   const handleEventClick = (event) => {
@@ -56,11 +56,18 @@ export default function CalendarPage() {
           {selectedCity !== 'all' && (
             <div 
               className="px-3 py-1.5 rounded-xl text-xs font-bold text-white shadow-sm"
-              style={{ backgroundColor: 'var(--active-city-color, #EE0087)' }}
+              style={{ backgroundColor: cityColors[selectedCity] || '#EE0087' }}
             >
               {selectedCity}
             </div>
           )}
+          <button
+            onClick={refetchCities}
+            className="p-1.5 rounded-lg text-ink-400 hover:text-ink-500 hover:bg-lavender-50 dark:hover:bg-[#333333] transition-colors"
+            title="Refresh cities and colors"
+          >
+            <RefreshCw className="w-4 h-4" />
+          </button>
         </div>
       </div>
 

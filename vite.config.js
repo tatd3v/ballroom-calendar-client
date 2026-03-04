@@ -7,24 +7,33 @@ export default defineConfig(({ mode }) => {
   // Set the third parameter to '' to load all env regardless of the `VITE_` prefix.
   const env = loadEnv(mode, process.cwd(), '');
 
+  // Extract backend URL from environment
+  const backendUrl = env.VITE_BACKEND_URL || 'http://localhost:3002/api';
+  
+  // For development proxy, extract the base URL without /api
+  const proxyTarget = backendUrl.replace('/api', '');
+
   return {
   server: {
     proxy: {
       '/api': {
-        target: 'http://localhost:3001',
+        target: proxyTarget,
         changeOrigin: true,
         secure: false,
       },
     },
     headers: {
       'Content-Security-Policy':
-        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; manifest-src 'self'; worker-src 'self' blob:;",
     },
+  },
+  define: {
+    __VITE_BACKEND_URL__: JSON.stringify(backendUrl),
   },
   preview: {
     headers: {
       'Content-Security-Policy':
-        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline';",
+        "default-src 'self'; font-src 'self' data:; connect-src 'self' ws: wss: http: https: res.cloudinary.com; img-src 'self' data: https://res.cloudinary.com; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; manifest-src 'self'; worker-src 'self' blob:;",
     },
   },
   build: {
@@ -47,6 +56,7 @@ export default defineConfig(({ mode }) => {
     VitePWA({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-touch-icon.png', 'mask-icon.svg'],
+      disabled: true, // Disable to stop blinking and multiple fetches
       manifest: {
         name: 'Event Calendar',
         short_name: 'Calendar',
@@ -55,25 +65,50 @@ export default defineConfig(({ mode }) => {
         background_color: '#ffffff',
         display: 'standalone',
         icons: [
-          // Icons temporarily removed - add pwa-192x192.png and pwa-512x512.png to public folder when available
+          // Add PWA icons to public folder when available
+          // {
+          //   src: 'pwa-192x192.png',
+          //   sizes: '192x192',
+          //   type: 'image/png'
+          // },
+          // {
+          //   src: 'pwa-512x512.png',
+          //   sizes: '512x512',
+          //   type: 'image/png'
+          // }
         ],
       },
       workbox: {
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        // Only cache static assets, not API requests
         runtimeCaching: [
           {
-            urlPattern: /\/api\//i,
+            // Cache images from Cloudinary
+            urlPattern: /^https:\/\/res\.cloudinary\.com\/.*/i,
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'images-cache',
+              expiration: {
+                maxEntries: 200,
+                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 days
+              },
+            },
+          },
+          {
+            // Cache static assets with NetworkFirst strategy
+            urlPattern: /\.(?:js|css|html|ico|png|svg)$/i,
             handler: 'NetworkFirst',
             options: {
-              cacheName: 'api-cache',
+              cacheName: 'static-cache',
               expiration: {
                 maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24,
+                maxAgeSeconds: 60 * 60 * 24, // 24 hours
               },
-              networkTimeoutSeconds: 10,
             },
           },
         ],
+        // Don't cache API requests - let them always go to network
+        navigateFallback: null,
       },
       devOptions: {
         enabled: true,

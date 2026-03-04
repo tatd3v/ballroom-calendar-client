@@ -162,9 +162,11 @@ export default function MobileCalendarExperience() {
     ]
   }, [t, user, handleNavigate])
 
-  const renderEventCard = (event, uniqueKey, isLast = false) => {
+  const renderEventCard = (event, index, groupDate, isLast = false) => {
     const timeLabel = getTimeDisplay(event)
     const color = cityColors[event.city] || activeCityColor
+    // Create a truly unique key using event data and crypto
+    const uniqueKey = `${event.id || 'unknown'}-${groupDate || 'nodate'}-${index}-${event.title || 'notitle'}`
     return (
       <button
         key={uniqueKey}
@@ -300,7 +302,7 @@ export default function MobileCalendarExperience() {
                     <div className="space-y-3">
                       {group.items.map((event, eventIndex) => {
                         const isLastEvent = isLastGroup && eventIndex === group.items.length - 1
-                        return renderEventCard(event, `${group.date}-${event.id}-${eventIndex}`, isLastEvent)
+                        return renderEventCard(event, eventIndex, group.date, isLastEvent)
                       })}
                     </div>
                   </div>

@@ -29,6 +29,8 @@ export function EventProvider({ children }) {
   const [futureEventsCount, setFutureEventsCount] = useState(0);
   const [upcomingCountsByCity, setUpcomingCountsByCity] = useState({});
   const [calendarLimit] = useState(50); // Events that fit in calendar view
+  const [error, setError] = useState(null);
+  const [fetching, setFetching] = useState(false);
   const { i18n } = useTranslation();
   const currentLang = i18n.language;
   const isMobile = useMobile();
@@ -49,11 +51,18 @@ export function EventProvider({ children }) {
     };
   }, []);
 
+  const clearCache = useCallback(() => {
+    localStorage.removeItem('calendar_events_cache');
+    localStorage.removeItem('calendar_events_cache_time');
+  }, []);
+
   const fetchEvents = useCallback(
     async (lang = currentLang, page = 1, limit = null, append = false) => {
-      // Use calendar limit for desktop, 10 for mobile initial load
-      const actualLimit = limit || (mobileRef.current ? 10 : calendarLimit);
-      const startTime = Date.now()
+      // Prevent duplicate requests
+      if (fetching) return;
+
+      // Use calendar limit for desktop, mobile limit for infinite scroll
+      const actualLimit = limit || calendarLimit;
 
       if (append) {
         setLoadingMore(true);
@@ -62,57 +71,20 @@ export function EventProvider({ children }) {
         setEvents([]);
         setCurrentPage(1);
         setHasMore(true);
+        setError(null);
       }
 
+      setFetching(true);
+
       try {
-        // Check cache first for instant response
-        const cacheKey = translationCache.getEventsKey(lang, 'all', page);
-        const cachedData = translationCache.get(cacheKey, true); // Use backend TTL
-
-        if (cachedData && !append) {
-          // Use cached data immediately
-          translationMetrics.trackCacheHit(cacheKey, 'backend');
-          setEvents(cachedData.events);
-          setHasMore(cachedData.hasMore);
-          setTotalEvents(cachedData.total);
-          setCurrentPage(cachedData.page);
-          setLoading(false);
-
-          // Track cache performance
-          const duration = Date.now() - startTime;
-          translationMetrics.trackBackendCall('/events', duration, cachedData.events.length);
-          return;
-        }
-
-        // Build API URL with language parameter (backend integration)
-        const apiUrl = backendIntegration.buildApiUrl('/api/events', lang, { 
-          limit: actualLimit,
-          page: page 
-        });
-
-        const response = await fetch(apiUrl);
-        if (!response.ok) {
-          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-        }
-
-        const data = await response.json();
+        // Remove lang parameter to avoid slow backend translation
+        const data = await eventsApi.getAll({ page, limit: actualLimit });
         const normalized = Array.isArray(data.events || data)
           ? (data.events || data).map(normalizeEvent)
           : [];
 
-        // Cache the results with backend TTL
-        const cacheData = {
-          events: normalized,
-          hasMore: data.pagination?.hasMore || normalized.length < actualLimit,
-          total: data.pagination?.total || normalized.length,
-          page: data.pagination?.page || page,
-          lang: lang,
-          timestamp: Date.now()
-        };
-        translationCache.set(cacheKey, cacheData, true); // Use backend TTL
-
         if (append) {
-          setEvents(prev => [...prev, ...normalized]);
+          setEvents((prev) => [...prev, ...normalized]);
         } else {
           setEvents(normalized);
         }
@@ -148,8 +120,8 @@ export function EventProvider({ children }) {
 
       } catch (error) {
         console.error('Failed to fetch events:', error);
+        setError(error.message);
 
-        // Fallback to localStorage cache
         const cached = localStorage.getItem('calendar_events_cache');
         if (cached && !append) {
           const parsedCache = JSON.parse(cached);
@@ -159,18 +131,22 @@ export function EventProvider({ children }) {
       } finally {
         setLoading(false);
         setLoadingMore(false);
+        setFetching(false);
       }
     },
-    [normalizeEvent, currentLang, calendarLimit],
+    [normalizeEvent, currentLang, calendarLimit, fetching, clearCache],
   );
 
-  const loadMoreEvents = useCallback((mobileLimit = 10) => {
-    if (!loadingMore && hasMore) {
-      const nextPage = currentPage + 1;
-      setCurrentPage(nextPage);
-      fetchEvents(currentLang, nextPage, mobileLimit, true);
-    }
-  }, [loadingMore, hasMore, currentPage, currentLang, fetchEvents]);
+  const loadMoreEvents = useCallback(
+    (mobileLimit = 10) => {
+      if (!loadingMore && hasMore) {
+        const nextPage = currentPage + 1;
+        setCurrentPage(nextPage);
+        fetchEvents(currentLang, nextPage, mobileLimit, true);
+      }
+    },
+    [loadingMore, hasMore, currentPage, fetchEvents],
+  );
 
   const resetEvents = useCallback(() => {
     setCurrentPage(1);
@@ -219,11 +195,9 @@ export function EventProvider({ children }) {
 
   useEffect(() => {
     fetchEvents(currentLang);
-    fetchFutureEventsCount();
-    fetchUpcomingCountsByCity();
-  }, [fetchEvents, currentLang, fetchFutureEventsCount, fetchUpcomingCountsByCity]);
+  }, [currentLang]); // Remove fetchEvents to prevent infinite loop
 
-  useEffect(() => {
+  const refetchCities = useCallback(() => {
     eventsApi
       .getCities()
       .then((data) => {
@@ -233,14 +207,18 @@ export function EventProvider({ children }) {
       .catch(() => {});
   }, []);
 
+  useEffect(() => {
+    refetchCities();
+  }, []); // Remove refetchCities to prevent infinite loop
+
   const cityCounts = useMemo(() => {
-    if (!Array.isArray(events)) return {}
+    if (!Array.isArray(events)) return {};
     return events.reduce((acc, event) => {
-      if (!event?.city) return acc
-      acc[event.city] = (acc[event.city] || 0) + 1
-      return acc
-    }, {})
-  }, [events])
+      if (!event?.city) return acc;
+      acc[event.city] = (acc[event.city] || 0) + 1;
+      return acc;
+    }, {});
+  }, [events]);
 
   const refetch = useCallback(
     () => fetchEvents(currentLang),
@@ -250,9 +228,11 @@ export function EventProvider({ children }) {
   const addEvent = async (event) => {
     try {
       const newEvent = await eventsApi.create(event);
+      clearCache(); // Clear cache after mutation
       setEvents((prev) => [...prev, normalizeEvent(newEvent)]);
       return newEvent;
     } catch (error) {
+      setError(error.message);
       throw error;
     }
   };
@@ -260,19 +240,31 @@ export function EventProvider({ children }) {
   const updateEvent = async (id, updates) => {
     try {
       const updated = await eventsApi.update(id, updates);
+      clearCache(); // Clear cache after mutation
       setEvents((prev) =>
-        prev.map((e) => (e.id === id ? normalizeEvent({ ...e, ...updated }) : e)),
+        prev.map((e) =>
+          e.id === id ? normalizeEvent({ ...e, ...updated }) : e,
+        ),
       );
     } catch (error) {
+      setError(error.message);
       throw error;
     }
   };
 
   const deleteEvent = async (id) => {
+    const originalEvents = events;
+
+    // Optimistic removal
+    setEvents((prev) => prev.filter((e) => e.id !== id));
+
     try {
       await eventsApi.delete(id);
-      setEvents((prev) => prev.filter((e) => e.id !== id));
+      clearCache(); // Clear cache after mutation
     } catch (error) {
+      // Rollback on failure
+      setEvents(originalEvents);
+      setError(error.message);
       throw error;
     }
   };
@@ -307,6 +299,9 @@ export function EventProvider({ children }) {
         updateEvent,
         deleteEvent,
         refetch,
+        refetchCities,
+        error,
+        clearCache,
       }}
     >
       {children}

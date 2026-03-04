@@ -12,14 +12,19 @@ export default function Layout() {
   const { theme } = useTheme();
   const isMobile = useMobile();
 
+  // Hide header/footer on mobile for full-screen experience
   const hideChrome = isMobile;
 
   return (
     <div
-      className={`min-h-screen transition-colors duration-300 ${theme === 'dark' ? 'bg-ink text-white' : ''}`}
+      className={`min-h-screen transition-colors duration-300 ${
+        theme === 'dark' ? 'bg-ink text-white' : 'bg-background-light text-ink'
+      }`}
     >
+      {/* Header */}
       {!hideChrome && <AppHeader />}
 
+      {/* Main content */}
       <main
         className={
           hideChrome ? '' : 'max-w-7xl mx-auto px-4 sm:px-6 py-5 md:py-8'
@@ -30,6 +35,7 @@ export default function Layout() {
         </div>
       </main>
 
+      {/* Footer */}
       {!hideChrome && <AppFooter />}
     </div>
   );

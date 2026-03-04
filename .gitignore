@@ -20,6 +20,4 @@ pnpm-debug.log*
 
 # Misc
 *.lock
-
-# Vercel
-.vercel/
+.vercel
