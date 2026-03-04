@@ -31,6 +31,7 @@ export default {
     events: 'eventos',
     event: 'evento',
     upcoming: 'próximos',
+    upcomingTotal: 'total próximos',
     total: 'total',
     in: 'en',
     today: 'Hoy',
