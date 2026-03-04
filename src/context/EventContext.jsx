@@ -5,10 +5,12 @@ import {
   useEffect,
   useCallback,
   useMemo,
+  useRef,
 } from 'react';
 import { useTranslation } from 'react-i18next';
 import { eventsApi } from '../services/api';
 import { translationCache, translationMetrics, backendIntegration } from '../services/translationService';
+import useMobile from '../hooks/useMobile';
 
 const EventContext = createContext(null);
 
@@ -24,9 +26,18 @@ export function EventProvider({ children }) {
   const [hasMore, setHasMore] = useState(true);
   const [currentPage, setCurrentPage] = useState(1);
   const [totalEvents, setTotalEvents] = useState(0);
+  const [futureEventsCount, setFutureEventsCount] = useState(0);
+  const [upcomingCountsByCity, setUpcomingCountsByCity] = useState({});
   const [calendarLimit] = useState(50); // Events that fit in calendar view
   const { i18n } = useTranslation();
   const currentLang = i18n.language;
+  const isMobile = useMobile();
+  const mobileRef = useRef(isMobile);
+  
+  // Update ref when isMobile changes
+  useEffect(() => {
+    mobileRef.current = isMobile;
+  }, [isMobile]);
 
   const normalizeEvent = useCallback((event) => {
     const dateValue = event.date || event.start || '';
@@ -40,8 +51,8 @@ export function EventProvider({ children }) {
 
   const fetchEvents = useCallback(
     async (lang = currentLang, page = 1, limit = null, append = false) => {
-      // Use calendar limit for desktop, mobile limit for infinite scroll
-      const actualLimit = limit || calendarLimit;
+      // Use calendar limit for desktop, 10 for mobile initial load
+      const actualLimit = limit || (mobileRef.current ? 10 : calendarLimit);
       const startTime = Date.now()
 
       if (append) {
@@ -186,9 +197,31 @@ export function EventProvider({ children }) {
     }
   }, [currentLang, normalizeEvent]);
 
+  const fetchFutureEventsCount = useCallback(async () => {
+    try {
+      const data = await eventsApi.getFutureCount();
+      setFutureEventsCount(data.count || 0);
+    } catch (error) {
+      console.error('Failed to fetch future events count:', error);
+      setFutureEventsCount(0);
+    }
+  }, []);
+
+  const fetchUpcomingCountsByCity = useCallback(async () => {
+    try {
+      const data = await eventsApi.getUpcomingCountsByCity();
+      setUpcomingCountsByCity(data || {});
+    } catch (error) {
+      console.error('Failed to fetch upcoming counts by city:', error);
+      setUpcomingCountsByCity({});
+    }
+  }, []);
+
   useEffect(() => {
     fetchEvents(currentLang);
-  }, [fetchEvents, currentLang]);
+    fetchFutureEventsCount();
+    fetchUpcomingCountsByCity();
+  }, [fetchEvents, currentLang, fetchFutureEventsCount, fetchUpcomingCountsByCity]);
 
   useEffect(() => {
     eventsApi
@@ -264,6 +297,8 @@ export function EventProvider({ children }) {
         hasMore,
         currentPage,
         totalEvents,
+        futureEventsCount,
+        upcomingCountsByCity,
         calendarLimit,
         loadMoreEvents,
         resetEvents,
