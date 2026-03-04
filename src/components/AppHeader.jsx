@@ -8,7 +8,6 @@ import useMobile from '../hooks/useMobile'
 import { useNavigationState } from '../hooks/useNavigationState'
 import LanguageDropdown from './ui/LanguageDropdown'
 import NavLink from './ui/NavLink'
-import MobileNavLink from './ui/MobileNavLink'
 
 /**
  * Application header component
@@ -104,10 +103,10 @@ export default function AppHeader() {
             navigation.menuOpen ? 'max-h-80 opacity-100 pb-4' : 'max-h-0 opacity-0'
           }`}>
             <nav className="pt-2 border-t border-lavender-100 dark:border-ink-600 space-y-1 animate-fade-in">
-              <MobileNavLink to="/" active={isActive('/')} icon={CalendarDays} label={t('nav.calendar')} onClick={() => navigation.setMenuOpen(false)} />
+              <NavLink to="/" active={isActive('/')} icon={CalendarDays} label={t('nav.calendar')} compact={true} onClick={() => navigation.setMenuOpen(false)} />
 
               {user && (
-                <MobileNavLink to="/admin" active={isActive('/admin')} icon={Settings} label={t('nav.manage')} onClick={() => navigation.setMenuOpen(false)} />
+                <NavLink to="/admin" active={isActive('/admin')} icon={Settings} label={t('nav.manage')} compact={true} onClick={() => navigation.setMenuOpen(false)} />
               )}
 
               {user ? (
@@ -122,7 +121,7 @@ export default function AppHeader() {
                   </span>
                 </button>
               ) : (
-                <MobileNavLink to="/login" active={isActive('/login')} icon={LogIn} label={t('nav.login')} onClick={() => navigation.setMenuOpen(false)} />
+                <NavLink to="/login" active={isActive('/login')} icon={LogIn} label={t('nav.login')} compact={true} onClick={() => navigation.setMenuOpen(false)} />
               )}
 
               {/* Mobile: Language + Theme */}
