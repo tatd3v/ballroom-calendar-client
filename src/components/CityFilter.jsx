@@ -5,7 +5,7 @@ import { MapPin } from 'lucide-react'
 import CityChips from './city/CityChips'
 
 export default function CityFilter() {
-  const { cities, cityColors, selectedCity, setSelectedCity, events } = useEvents()
+  const { cities, cityColors, selectedCity, setSelectedCity, upcomingCountsByCity } = useEvents()
   const { t } = useTranslation()
   const { theme } = useTheme()
   const isDark = theme === 'dark'
@@ -33,12 +33,10 @@ export default function CityFilter() {
         cities={cities}
         cityColors={cityColors}
         selectedCity={selectedCity}
-        totalEvents={events.length}
+        totalEvents={Object.values(upcomingCountsByCity).reduce((sum, count) => sum + count, 0)}
         onSelect={setSelectedCity}
-        counts={cities.reduce((acc, city) => {
-          acc[city] = events.filter((event) => event.city === city).length
-          return acc
-        }, {})}
+        counts={upcomingCountsByCity}
+        allLabel={t('admin.allCities')}
       />
     </div>
   )

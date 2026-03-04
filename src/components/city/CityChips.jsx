@@ -38,8 +38,16 @@ export default function CityChips({
             : 'bg-white text-ink-400 border-lavender-100 dark:bg-white/5 dark:text-gray-200 dark:border-border-dark hover:bg-lavender-50 hover:border-lavender-200'
         )}
       >
-        <span>{totalEvents}</span>
         <span>{allLabel}</span>
+        {showCounts && (
+          <span
+            className={`px-1.5 py-0.5 rounded-md text-[10px] font-bold ${
+              selectedCity === 'all' ? 'bg-white/20' : 'bg-white/10'
+            }`}
+          >
+            {totalEvents}
+          </span>
+        )}
       </button>
 
       {cities.map((city) => {
