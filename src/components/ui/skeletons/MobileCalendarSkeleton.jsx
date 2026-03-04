@@ -59,25 +59,29 @@ function DayGroupSkeleton({ cardCount, colorOffset = 0 }) {
  */
 export default function MobileCalendarSkeleton() {
   return (
-    <div className="pb-24">
-      {/* Section 1: City filter pills — matches px-4 py-6 bg-white border-b */}
-      <section className="px-4 py-6 bg-white dark:bg-background-dark border-b border-primary/5 dark:border-white/5">
-        <div className="flex gap-2 overflow-hidden pb-2">
+    <>
+      {/* City filter skeleton */}
+      <section className="px-4 py-6 bg-white dark:bg-background-dark border-b border-primary/5 space-y-6">
+        <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
           {/* Active pill */}
-          <div className="flex-none h-9 w-24 rounded-full animate-pulse bg-primary/30" />
+          <div className="flex-none px-5 py-2 rounded-full bg-primary animate-pulse">
+            <SkeletonBlock className="h-4 w-12" />
+          </div>
           {/* Inactive pills */}
-          {['w-20', 'w-24', 'w-20', 'w-28'].map((w, i) => (
-            <div key={i} className={`flex-none h-9 ${w} rounded-full animate-pulse bg-ink/10 dark:bg-white/10`} />
+          {Array.from({ length: 4 }).map((_, i) => (
+            <div key={i} className="flex-none px-5 py-2 rounded-full border border-primary/10 bg-primary/10">
+              <SkeletonBlock className="h-4 w-16" />
+            </div>
           ))}
         </div>
       </section>
 
-      {/* Section 2: Grouped events — matches px-4 space-y-6 mt-6 */}
+      {/* Events skeleton */}
       <section className="px-4 space-y-6 mt-6">
         <DayGroupSkeleton cardCount={2} colorOffset={0} />
         <DayGroupSkeleton cardCount={1} colorOffset={2} />
         <DayGroupSkeleton cardCount={2} colorOffset={1} />
       </section>
-    </div>
+    </>
   )
 }

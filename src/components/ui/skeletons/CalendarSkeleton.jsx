@@ -1,4 +1,5 @@
 import SkeletonBlock from './SkeletonBlock'
+import { useTheme } from '../../../context/ThemeContext'
 
 const DAYS = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat']
 
@@ -10,14 +11,21 @@ const EVENT_MAP = {
 
 /**
  * CalendarSkeleton — mirrors EventCalendar's exact wrapper + FullCalendar DOM:
- * - Outer: rounded-2xl p-4 md:p-6 (glass-strong / dark bg)
+ * - Outer: rounded-2xl p-3 sm:p-4 md:p-6 with glass-strong/dark styling
  * - fc-header-toolbar: [prev][next][today] | [Month title] | [Month][Week][List]
  * - fc-col-header: 7 day-name columns
  * - fc-daygrid: 5 weeks × 7 day cells, day number top-right, event pills below
  */
 export default function CalendarSkeleton() {
+  const { theme } = useTheme()
+  const isDark = theme === 'dark'
+
   return (
-    <div className="rounded-2xl p-3 sm:p-4 md:p-6 bg-white dark:bg-[#222222] border border-lavender/10 dark:border-border-dark shadow-xl">
+    <div className={`rounded-2xl p-3 sm:p-4 md:p-6 transition-shadow duration-300 ${
+      isDark 
+        ? 'bg-[#222222] border border-border-dark shadow-2xl' 
+        : 'glass-strong hover:shadow-glass-lg'
+    }`}>
 
       {/* fc-header-toolbar */}
       <div className="flex items-center justify-between mb-4">
