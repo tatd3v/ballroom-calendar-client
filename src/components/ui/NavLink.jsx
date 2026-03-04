@@ -1,16 +1,22 @@
 import { Link } from 'react-router-dom'
 
 /**
- * Desktop navigation link component
- * Follows Single Responsibility Principle - handles only desktop navigation link rendering
+ * Unified navigation link component
+ * Follows Single Responsibility Principle - handles only navigation link rendering
+ * Supports both desktop and mobile layouts via compact prop
  */
-export default function NavLink({ to, active, icon: Icon, label }) {
+export default function NavLink({ to, active, icon: Icon, label, onClick, compact = false }) {
+  const paddingClasses = compact ? 'px-4 py-2.5' : 'px-4 py-2'
+  const gapClasses = compact ? 'gap-3' : 'gap-2'
+  const shadowClasses = active ? (compact ? 'shadow-sm' : 'shadow-sm shadow-primary/20') : ''
+  
   return (
     <Link
       to={to}
-      className={`flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 ${
+      onClick={onClick}
+      className={`flex items-center ${gapClasses} ${paddingClasses} rounded-xl text-sm font-semibold transition-all duration-200 ${
         active
-          ? 'bg-primary text-white shadow-sm shadow-primary/20'
+          ? `bg-primary text-white ${shadowClasses}`
           : 'text-ink-400 dark:text-ink-200 hover:bg-lavender-50 dark:hover:bg-ink-700 hover:text-ink dark:hover:text-white'
       }`}
     >
